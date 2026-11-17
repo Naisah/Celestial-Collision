@@ -865,9 +865,8 @@ function animate() {
       h: 540
     };
 
-    const gapX = Math.max(0, Math.max(myRect.x - (peerRect.x + peerRect.w), peerRect.x - (myRect.x + myRect.w)));
-    const gapY = Math.max(0, Math.max(myRect.y - (peerRect.y + peerRect.h), peerRect.y - (myRect.y + myRect.h)));
-    const boxGap = Math.hypot(gapX, gapY);
+    const overlapX = Math.max(0, Math.min(myRect.x + myRect.w, peerRect.x + peerRect.w) - Math.max(myRect.x, peerRect.x));
+    const overlapY = Math.max(0, Math.min(myRect.y + myRect.h, peerRect.y + peerRect.h) - Math.max(myRect.y, peerRect.y));
 
     statusDot.classList.add('connected');
     statusText.textContent = '2/2 Celestial Cores Entangled';
@@ -877,10 +876,11 @@ function animate() {
 
     updateAudio(dist);
 
-    const isColliding = boxGap < 90 || dist < 600;
+    const isColliding = (overlapX > 45 && overlapY > 45) || dist < 320;
 
     if (isColliding) {
-      const chargeSpeed = boxGap === 0 ? 1.6 : (1 - boxGap / 90) * 1.3 + 0.5;
+      const depthFactor = Math.min(1, Math.max(overlapX / 220, (320 - dist) / 220));
+      const chargeSpeed = 0.8 + depthFactor * 0.9;
       collisionEnergy = Math.min(100, collisionEnergy + chargeSpeed);
       if (collisionEnergy >= 100 && !isCatMode) {
         isCatMode = true;
@@ -890,7 +890,7 @@ function animate() {
         setTimeout(() => catToast.classList.remove('active'), 3200);
       }
     } else {
-      collisionEnergy = Math.max(0, collisionEnergy - 0.6);
+      collisionEnergy = Math.max(0, collisionEnergy - 0.7);
       if (collisionEnergy <= 0 && isCatMode) {
         isCatMode = false;
         statusDot.classList.remove('cat-mode');
@@ -961,7 +961,7 @@ function animate() {
       line.visible = true;
     }
 
-    if (isColliding && boxGap < 40) {
+    if (isColliding) {
       const midX = (myRect.cx + peer.center.x) / 2;
       const midY = (myRect.cy + peer.center.y) / 2;
       shockwave.position.set(midX, -midY, 10);
@@ -974,6 +974,7 @@ function animate() {
       shockwave.visible = true;
     } else {
       shockwave.visible = false;
+      shockwaveScale = 1;
     }
 
   } else {
@@ -985,7 +986,7 @@ function animate() {
     streamlines.forEach(l => (l.visible = false));
     if (peerOrb) peerOrb.group.visible = false;
 
-    collisionEnergy = Math.max(0, collisionEnergy - 0.6);
+    collisionEnergy = Math.max(0, collisionEnergy - 0.7);
     if (collisionEnergy <= 0 && isCatMode) {
       isCatMode = false;
       statusDot.classList.remove('cat-mode');
