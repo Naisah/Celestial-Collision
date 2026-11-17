@@ -23,7 +23,6 @@ body, html {
   z-index: 1;
 }
 
-/* Glassmorphism Top HUD */
 .hud-header {
   position: absolute;
   top: 18px;
@@ -94,7 +93,6 @@ body, html {
   50% { transform: scale(1.3); opacity: 1; }
 }
 
-/* Floating Distance & Metrics */
 .metrics-overlay {
   position: absolute;
   top: 72px;
@@ -140,7 +138,6 @@ body, html {
   transition: width 0.15s ease-out;
 }
 
-/* Bottom Action Bar */
 .hud-footer {
   position: absolute;
   bottom: 22px;
@@ -257,7 +254,6 @@ body, html {
   text-align: center;
 }
 
-/* Cat Constellation Announcement Toast */
 .cat-toast {
   position: absolute;
   top: 110px;

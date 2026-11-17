@@ -3,15 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Celestial Collision • Entangled Across Windows</title>
+    <title>Celestial Collision</title>
     <link rel="stylesheet" href="/src/style.css" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%233b82f6'/></svg>" />
   </head>
   <body>
-    <!-- 3D WebGL Canvas Container -->
     <div id="canvas-container"></div>
 
-    <!-- Top HUD Banner -->
     <div class="hud-header">
       <span class="title">Celestial Collision</span>
       <div class="divider"></div>
@@ -21,7 +19,6 @@
       </div>
     </div>
 
-    <!-- Dynamic Metrics Overlay -->
     <div class="metrics-overlay" id="metrics-overlay">
       <span>DIST: <strong id="dist-val">0</strong> PX</span>
       <span>TENSION: <strong id="tension-val">0</strong> AU</span>
@@ -33,20 +30,15 @@
       </span>
     </div>
 
-    <!-- Cat Constellation Toast -->
     <div class="cat-toast" id="cat-toast">
-      ✨ MEOW! COSMIC CAT CONSTELLATION AWAKENED! 🐱
+      Cosmic Cat Constellation Active
     </div>
 
-    <!-- Bottom Controls -->
     <div class="hud-footer">
       <div class="controls-row">
-        <!-- Palette Color Swatches -->
-        <div class="palette-picker" id="palette-picker" title="Change Celestial Core Palette">
-          <!-- Dynamically populated -->
-        </div>
+        <div class="palette-picker" id="palette-picker" title="Change Palette"></div>
 
-        <button id="spawn-btn" class="btn btn-primary" title="Open a companion window">
+        <button id="spawn-btn" class="btn btn-primary" title="Open companion window">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
             <path d="M3 9h18"/>
@@ -55,11 +47,11 @@
           Spawn Partner Window
         </button>
 
-        <button id="cat-btn" class="btn btn-cat" title="Toggle Cosmic Cat Constellation">
-          🐱 Cat Shape
+        <button id="cat-btn" class="btn btn-cat" title="Toggle Cat Constellation">
+          Cat Shape
         </button>
 
-        <button id="sound-btn" class="btn btn-icon" title="Toggle Synthesizer Sound">
+        <button id="sound-btn" class="btn btn-icon" title="Toggle Audio">
           <svg id="sound-icon-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
             <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
@@ -69,7 +61,7 @@
       </div>
 
       <p class="hint-text">
-        Drag windows close together to charge the collision meter and unlock the Cosmic Cat!
+        Drag windows close together to charge the collision meter and trigger the cat constellation
       </p>
     </div>
 

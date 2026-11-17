@@ -1,8 +1,5 @@
 import * as THREE from 'three';
 
-// ============================================================================
-// 1. CELESTIAL PALETTES (Signature Quantum Blue from the reference image first!)
-// ============================================================================
 const PALETTES = [
   {
     id: 'quantum-azure',
@@ -69,22 +66,12 @@ const PALETTES = [
 const urlParams = new URLSearchParams(window.location.search);
 let currentPaletteIndex = urlParams.has('theme')
   ? parseInt(urlParams.get('theme')) % PALETTES.length
-  : 0; // Default to Quantum Azure to match the stunning reference photo!
+  : 0;
 let myPalette = PALETTES[currentPaletteIndex];
 
 const windowId = 'celestial_' + Math.random().toString(36).substring(2, 9);
 const peers = new Map();
 
-// ============================================================================
-// 2. EXACT SCREEN COORDINATES ("One Screen, Many Holes" Formula)
-// ============================================================================
-// Exact formula from Avi Vashishta's blog:
-// const rect = {
-//   x: window.screenX + (window.outerWidth - window.innerWidth) / 2,
-//   y: window.screenY + (window.outerHeight - window.innerHeight),
-//   w: window.innerWidth,
-//   h: window.innerHeight,
-// };
 function getWindowRect() {
   const sx = window.screenX !== undefined ? window.screenX : (window.screenLeft || 0);
   const sy = window.screenY !== undefined ? window.screenY : (window.screenTop || 0);
@@ -101,9 +88,6 @@ function getWindowRect() {
   };
 }
 
-// ============================================================================
-// 3. PROCEDURAL TEXTURES (High-Definition Glowing Particles & Celestial Aura)
-// ============================================================================
 function createParticleTexture() {
   const canvas = document.createElement('canvas');
   canvas.width = 128;
@@ -146,9 +130,6 @@ function createGlowSpriteTexture(colorHexStr) {
 
 const particleTexture = createParticleTexture();
 
-// ============================================================================
-// 4. THREE.JS SCENE & SCREEN-SPACE ORTHOGRAPHIC CAMERA
-// ============================================================================
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
 
@@ -172,9 +153,6 @@ renderer.setSize(initialRect.w, initialRect.h);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 container.appendChild(renderer.domElement);
 
-// ============================================================================
-// 5. GLOBAL BACKGROUND STARFIELD (Fixed in Screen Space)
-// ============================================================================
 const bgCount = 600;
 const bgGeo = new THREE.BufferGeometry();
 const bgPositions = new Float32Array(bgCount * 3);
@@ -197,13 +175,9 @@ const bgMaterial = new THREE.PointsMaterial({
 const bgStars = new THREE.Points(bgGeo, bgMaterial);
 scene.add(bgStars);
 
-// ============================================================================
-// 6. BUILD HIGH-FIDELITY CELESTIAL ORB (Matching Avi Vashishta's Photo!)
-// ============================================================================
 function createCelestialOrb(palette) {
   const orbGroup = new THREE.Group();
 
-  // A) Ambient Soft Halo Glow
   const glowMat = new THREE.SpriteMaterial({
     map: createGlowSpriteTexture(palette.primary),
     color: palette.hexPrimary,
@@ -213,20 +187,18 @@ function createCelestialOrb(palette) {
     depthWrite: false
   });
   const haloSprite = new THREE.Sprite(glowMat);
-  haloSprite.scale.set(480, 480, 1); // Large majestic halo
+  haloSprite.scale.set(480, 480, 1);
   orbGroup.add(haloSprite);
 
-  // B) Dense Core Volumetric Star Cloud (2,500 particles)
   const coreCount = 2500;
   const coreGeo = new THREE.BufferGeometry();
   const corePositions = new Float32Array(coreCount * 3);
   const coreOriginalSphere = [];
   const coreCatTarget = [];
 
-  const CORE_RADIUS = 135; // Rich prominent orb size
+  const CORE_RADIUS = 135;
 
   for (let i = 0; i < coreCount; i++) {
-    // 1. Concentrated Spherical distribution
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(Math.random() * 2 - 1);
     const r = CORE_RADIUS * Math.pow(Math.random(), 0.65);
@@ -240,18 +212,15 @@ function createCelestialOrb(palette) {
     corePositions[i * 3 + 2] = sz;
     coreOriginalSphere.push(new THREE.Vector3(sx, sy, sz));
 
-    // 2. Cat Constellation Target Coordinates
     let cx = 0, cy = 0, cz = (Math.random() - 0.5) * 20;
     const catGroup = i % 100;
 
     if (catGroup < 45) {
-      // Cat Head & Round Cute Cheeks
       const angle = Math.random() * Math.PI * 2;
       const rad = 85 * Math.pow(Math.random(), 0.5);
       cx = Math.cos(angle) * (rad * 1.15);
       cy = Math.sin(angle) * (rad * 0.95) - 5;
     } else if (catGroup < 60) {
-      // Left Pointy Cat Ear
       const u = Math.random();
       const v = Math.random();
       const baseL = new THREE.Vector2(-75, 55);
@@ -263,7 +232,6 @@ function createCelestialOrb(palette) {
       cx = w0 * baseL.x + w1 * baseR.x + w2 * tip.x;
       cy = w0 * baseL.y + w1 * baseR.y + w2 * tip.y;
     } else if (catGroup < 75) {
-      // Right Pointy Cat Ear
       const u = Math.random();
       const v = Math.random();
       const baseL = new THREE.Vector2(25, 75);
@@ -275,7 +243,6 @@ function createCelestialOrb(palette) {
       cx = w0 * baseL.x + w1 * baseR.x + w2 * tip.x;
       cy = w0 * baseL.y + w1 * baseR.y + w2 * tip.y;
     } else if (catGroup < 88) {
-      // Whiskers (3 left, 3 right)
       const isRight = (catGroup % 2 === 0);
       const side = isRight ? 1 : -1;
       const whiskerRow = Math.floor(Math.random() * 3);
@@ -287,7 +254,6 @@ function createCelestialOrb(palette) {
       cx = THREE.MathUtils.lerp(startX, endX, t);
       cy = THREE.MathUtils.lerp(startY, endY, t) + Math.sin(t * Math.PI) * (side * 4);
     } else if (catGroup < 94) {
-      // Cat Eyes
       const eyeSide = (catGroup % 2 === 0) ? 1 : -1;
       const eyeCenter = new THREE.Vector2(eyeSide * 35, 18);
       const eyeAngle = Math.random() * Math.PI * 2;
@@ -295,7 +261,6 @@ function createCelestialOrb(palette) {
       cx = eyeCenter.x + Math.cos(eyeAngle) * eyeR * 1.3;
       cy = eyeCenter.y + Math.sin(eyeAngle) * eyeR * 0.75;
     } else if (catGroup < 97) {
-      // Cute Button Nose & Mouth
       const u = Math.random();
       if (u < 0.6) {
         cx = (Math.random() - 0.5) * 12;
@@ -307,7 +272,6 @@ function createCelestialOrb(palette) {
         cy = -20 - Math.sin(mt * Math.PI) * 5;
       }
     } else {
-      // Twinkling Stardust
       const sAngle = Math.random() * Math.PI * 2;
       const sR = 120 + Math.random() * 60;
       cx = Math.cos(sAngle) * sR;
@@ -330,7 +294,6 @@ function createCelestialOrb(palette) {
   const corePoints = new THREE.Points(coreGeo, coreMat);
   orbGroup.add(corePoints);
 
-  // C) 14 3D Magnetic Dipole Flux Loops (1,800 particles)
   const loopCount = 14;
   const particlesPerLoop = 130;
   const fluxTotal = loopCount * particlesPerLoop;
@@ -377,7 +340,6 @@ function createCelestialOrb(palette) {
   const fluxPoints = new THREE.Points(fluxGeo, fluxMat);
   orbGroup.add(fluxPoints);
 
-  // D) Cat Constellation Hologram Lines
   const catLineIndices = [
     new THREE.Vector3(-75, 55, 0), new THREE.Vector3(-60, 155, 0),
     new THREE.Vector3(-60, 155, 0), new THREE.Vector3(-25, 75, 0),
@@ -429,16 +391,11 @@ function createCelestialOrb(palette) {
   };
 }
 
-// Create Primary Orb (This Window's Orb)
 const myOrb = createCelestialOrb(myPalette);
 scene.add(myOrb.group);
 
-// Create Companion Orb (For Peer Window when Entangled)
 let peerOrb = null;
 
-// ============================================================================
-// 7. ENTANGLED DIPOLE STREAM & CONTINUOUS GRAVITATIONAL FIELD LINES
-// ============================================================================
 const bridgeParticleCount = 1000;
 const bridgeGeo = new THREE.BufferGeometry();
 const bridgePositions = new Float32Array(bridgeParticleCount * 3);
@@ -468,7 +425,6 @@ const bridgeParticles = new THREE.Points(bridgeGeo, bridgeMaterial);
 bridgeParticles.visible = false;
 scene.add(bridgeParticles);
 
-// Continuous Gravitational Streamlines
 const streamCount = 7;
 const streamlines = [];
 const streamlineMaterials = [];
@@ -488,7 +444,6 @@ for (let i = 0; i < streamCount; i++) {
   streamlineMaterials.push(lineMat);
 }
 
-// Shockwave Ring on Super Collision
 const shockwaveGeo = new THREE.RingGeometry(1, 6, 64);
 const shockwaveMat = new THREE.MeshBasicMaterial({
   color: 0xffffff,
@@ -502,13 +457,10 @@ shockwave.visible = false;
 scene.add(shockwave);
 let shockwaveScale = 1;
 
-// ============================================================================
-// 8. MULTI-WINDOW COMMUNICATION & STATE SYNCHRONIZATION
-// ============================================================================
 const channel = new BroadcastChannel('celestial_collision_network');
 
 let isCatMode = false;
-let collisionEnergy = 0; // 0% to 100%
+let collisionEnergy = 0;
 
 function broadcastState() {
   const rect = getWindowRect();
@@ -558,9 +510,6 @@ function prunePeers() {
   }
 }
 
-// ============================================================================
-// 9. DYNAMIC AUDIO ENGINE (Web Audio Synthesizer)
-// ============================================================================
 let audioCtx = null;
 let droneOsc = null;
 let droneGain = null;
@@ -608,9 +557,9 @@ function playCatChime() {
   const gain = audioCtx.createGain();
 
   osc.type = 'sine';
-  osc.frequency.setValueAtTime(587.33, now); // D5
-  osc.frequency.exponentialRampToValueAtTime(880.0, now + 0.18); // A5
-  osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.38); // G5
+  osc.frequency.setValueAtTime(587.33, now);
+  osc.frequency.exponentialRampToValueAtTime(880.0, now + 0.18);
+  osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.38);
 
   gain.gain.setValueAtTime(0.2, now);
   gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
@@ -622,9 +571,6 @@ function playCatChime() {
   osc.stop(now + 0.45);
 }
 
-// ============================================================================
-// 10. UI CONTROLS & PALETTE SWITCHER
-// ============================================================================
 const statusDot = document.getElementById('status-dot');
 const statusText = document.getElementById('status-text');
 const metricsOverlay = document.getElementById('metrics-overlay');
@@ -653,16 +599,15 @@ function triggerCatConstellation(manual = false) {
   if (isCatMode) {
     statusDot.classList.add('cat-mode');
     catToast.classList.add('active');
-    catBtn.textContent = '🌟 Star Shape';
+    catBtn.textContent = 'Star Shape';
     playCatChime();
     setTimeout(() => catToast.classList.remove('active'), 3200);
   } else {
     statusDot.classList.remove('cat-mode');
-    catBtn.textContent = '🐱 Cat Shape';
+    catBtn.textContent = 'Cat Shape';
   }
 }
 
-// Render Palette Swatches
 const pickerContainer = document.getElementById('palette-picker');
 PALETTES.forEach((p) => {
   const swatch = document.createElement('div');
@@ -676,7 +621,6 @@ PALETTES.forEach((p) => {
 
 catBtn.addEventListener('click', () => triggerCatConstellation(true));
 
-// Spawn companion window immediately to the right of this window
 spawnBtn.addEventListener('click', () => {
   const rect = getWindowRect();
   const nextThemeIdx = (currentPaletteIndex + 1) % PALETTES.length;
@@ -718,7 +662,6 @@ window.addEventListener('resize', () => {
   renderer.setSize(rect.w, rect.h);
 });
 
-// Spacebar cycles colors, C toggles cat mode
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Space') {
     e.preventDefault();
@@ -730,9 +673,6 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-// ============================================================================
-// 11. MAIN ANIMATION LOOP (Global Screen Space Math)
-// ============================================================================
 const clock = new THREE.Clock();
 
 function animate() {
@@ -742,7 +682,6 @@ function animate() {
   broadcastState();
   prunePeers();
 
-  // 1. Update Camera to follow this window's exact screen position
   const myRect = getWindowRect();
   camera.left = myRect.x;
   camera.right = myRect.x + myRect.w;
@@ -750,10 +689,8 @@ function animate() {
   camera.bottom = -(myRect.y + myRect.h);
   camera.updateProjectionMatrix();
 
-  // 2. Position My Celestial Orb at this window's exact screen center
   myOrb.group.position.set(myRect.cx, -myRect.cy, 0);
 
-  // 3. Animate My Orb Particles (Sphere <-> Cat Morphing)
   const corePosArr = myOrb.coreGeo.attributes.position.array;
   for (let i = 0; i < myOrb.coreOriginalSphere.length; i++) {
     const target = isCatMode ? myOrb.coreCatTarget[i] : myOrb.coreOriginalSphere[i];
@@ -763,7 +700,6 @@ function animate() {
   }
   myOrb.coreGeo.attributes.position.needsUpdate = true;
 
-  // Animate Magnetic Dipole Loops (Avi Vashishta's signature flux orbits!)
   const fluxPosArr = myOrb.fluxGeo.attributes.position.array;
   for (let i = 0; i < myOrb.fluxOffsets.length; i++) {
     const item = myOrb.fluxOffsets[i];
@@ -783,7 +719,6 @@ function animate() {
   }
   myOrb.fluxGeo.attributes.position.needsUpdate = true;
 
-  // Cat line opacity & gentle constellation breathing
   if (isCatMode) {
     myOrb.catLineMat.opacity = Math.min(0.85, myOrb.catLineMat.opacity + 0.05);
     const breath = 1 + Math.sin(elapsedTime * 2.5) * 0.03;
@@ -799,27 +734,22 @@ function animate() {
     myOrb.group.rotation.z = elapsedTime * 0.12;
   }
 
-  // 4. Multi-Window Physics & Screen-Space Entanglement
   const activePeers = Array.from(peers.values());
 
   if (activePeers.length > 0) {
     const peer = activePeers[0];
 
-    // Ensure peer orb exists
     if (!peerOrb) {
       peerOrb = createCelestialOrb(peer.palette);
       scene.add(peerOrb.group);
     }
-    // Update peer palette if changed
     if (peerOrb.currentPaletteId !== peer.palette.id) {
       peerOrb.updatePalette(peer.palette);
     }
 
-    // Update peer orb position in Global Screen Space
     peerOrb.group.position.set(peer.center.x, -peer.center.y, 0);
     peerOrb.group.visible = true;
 
-    // Animate peer orb core particles (Sphere <-> Cat Morphing based on peer's cat state)
     const pCorePos = peerOrb.coreGeo.attributes.position.array;
     for (let i = 0; i < peerOrb.coreOriginalSphere.length; i++) {
       const target = peer.isCat ? peerOrb.coreCatTarget[i] : peerOrb.coreOriginalSphere[i];
@@ -829,7 +759,6 @@ function animate() {
     }
     peerOrb.coreGeo.attributes.position.needsUpdate = true;
 
-    // Animate peer orb magnetic loops
     const pFluxPos = peerOrb.fluxGeo.attributes.position.array;
     for (let i = 0; i < peerOrb.fluxOffsets.length; i++) {
       const item = peerOrb.fluxOffsets[i];
@@ -851,12 +780,10 @@ function animate() {
       peerOrb.group.rotation.z = elapsedTime * 0.12;
     }
 
-    // Vector in physical screen pixels
     const dx = peer.center.x - myRect.cx;
     const dy = peer.center.y - myRect.cy;
     const dist = Math.hypot(dx, dy) || 1;
 
-    // UI Updates
     statusDot.classList.add('connected');
     statusText.textContent = `${activePeers.length + 1} Celestial Cores Entangled`;
     metricsOverlay.classList.add('visible');
@@ -865,7 +792,6 @@ function animate() {
 
     updateAudio(dist);
 
-    // Collision Overload -> Cat Mode Activation!
     if (dist < 280) {
       collisionEnergy = Math.min(100, collisionEnergy + 1.2);
       if (collisionEnergy >= 100 && !isCatMode) {
@@ -876,7 +802,6 @@ function animate() {
     }
     collisionBar.style.width = `${collisionEnergy}%`;
 
-    // Continuous Invariant Math Across Both Windows:
     const isPrimary = windowId < peer.id;
     const starA = isPrimary ? myRect.cx : peer.center.x;
     const starA_y = isPrimary ? myRect.cy : peer.center.y;
@@ -887,14 +812,12 @@ function animate() {
     const spanY = starB_y - starA_y;
     const totalDist = Math.hypot(spanX, spanY) || 1;
 
-    // Perpendicular normal vector
     const normX = -spanY / totalDist;
     const normY = spanX / totalDist;
 
     const colA = new THREE.Color(myPalette.hexPrimary);
     const colB = new THREE.Color(peer.palette.hexPrimary);
 
-    // 1. Entangled Particle Stream (Directly in Global Screen Coordinates!)
     const bridgePos = bridgeGeo.attributes.position.array;
     const bridgeCol = bridgeGeo.attributes.color.array;
 
@@ -905,11 +828,9 @@ function animate() {
       const u = bridgeProgress[i];
       const wave = Math.sin(u * Math.PI) * bridgeSpread[i] + Math.sin(u * Math.PI * 4 + elapsedTime * 4) * 8;
 
-      // Global Screen Coordinates:
       const gx = starA + spanX * u + normX * wave;
       const gy = starA_y + spanY * u + normY * wave;
 
-      // In Three.js screen-space world, X = gx, Y = -gy:
       bridgePos[i * 3] = gx;
       bridgePos[i * 3 + 1] = -gy;
       bridgePos[i * 3 + 2] = Math.sin(u * Math.PI * 3 + elapsedTime * 3) * 15;
@@ -923,7 +844,6 @@ function animate() {
     bridgeGeo.attributes.color.needsUpdate = true;
     bridgeParticles.visible = true;
 
-    // 2. Gravitational Dipole Streamlines
     for (let l = 0; l < streamCount; l++) {
       const line = streamlines[l];
       const points = [];
@@ -944,7 +864,6 @@ function animate() {
       line.visible = true;
     }
 
-    // 3. Collision Shockwave
     if (dist < 240) {
       const midX = (myRect.cx + peer.center.x) / 2;
       const midY = (myRect.cy + peer.center.y) / 2;
@@ -961,7 +880,6 @@ function animate() {
     }
 
   } else {
-    // Solo Orbit Mode
     statusDot.classList.remove('connected');
     statusText.textContent = '1 Celestial Core (Solo Orbit)';
     metricsOverlay.classList.remove('visible');
