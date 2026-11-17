@@ -617,6 +617,7 @@ const statusText = document.getElementById('status-text');
 const metricsOverlay = document.getElementById('metrics-overlay');
 const tensionVal = document.getElementById('tension-val');
 const distVal = document.getElementById('dist-val');
+const energyVal = document.getElementById('energy-val');
 const collisionBar = document.getElementById('collision-bar');
 const spawnBtn = document.getElementById('spawn-btn');
 const soundBtn = document.getElementById('sound-btn');
@@ -804,6 +805,17 @@ function animate() {
     const dy = peer.center.y - myRect.cy;
     const dist = Math.hypot(dx, dy) || 1;
 
+    const peerRect = peer.rect || {
+      x: peer.center.x - 270,
+      y: peer.center.y - 270,
+      w: 540,
+      h: 540
+    };
+
+    const gapX = Math.max(0, Math.max(myRect.x - (peerRect.x + peerRect.w), peerRect.x - (myRect.x + myRect.w)));
+    const gapY = Math.max(0, Math.max(myRect.y - (peerRect.y + peerRect.h), peerRect.y - (myRect.y + myRect.h)));
+    const boxGap = Math.hypot(gapX, gapY);
+
     statusDot.classList.add('connected');
     statusText.textContent = `${activePeers.length + 1} Celestial Cores Entangled`;
     metricsOverlay.classList.add('visible');
@@ -812,8 +824,11 @@ function animate() {
 
     updateAudio(dist);
 
-    if (dist < 260) {
-      collisionEnergy = Math.min(100, collisionEnergy + 1.2);
+    const isColliding = boxGap < 90 || dist < 600;
+
+    if (isColliding) {
+      const chargeSpeed = boxGap === 0 ? 1.6 : (1 - boxGap / 90) * 1.3 + 0.5;
+      collisionEnergy = Math.min(100, collisionEnergy + chargeSpeed);
       if (collisionEnergy >= 100 && !isCatMode) {
         isCatMode = true;
         statusDot.classList.add('cat-mode');
@@ -822,13 +837,14 @@ function animate() {
         setTimeout(() => catToast.classList.remove('active'), 3200);
       }
     } else {
-      collisionEnergy = Math.max(0, collisionEnergy - 0.5);
+      collisionEnergy = Math.max(0, collisionEnergy - 0.6);
       if (collisionEnergy <= 0 && isCatMode) {
         isCatMode = false;
         statusDot.classList.remove('cat-mode');
       }
     }
     collisionBar.style.width = `${collisionEnergy}%`;
+    if (energyVal) energyVal.textContent = Math.round(collisionEnergy);
 
     const isPrimary = windowId < peer.id;
     const starA = isPrimary ? myRect.cx : peer.center.x;
@@ -892,7 +908,7 @@ function animate() {
       line.visible = true;
     }
 
-    if (dist < 240) {
+    if (isColliding && boxGap < 40) {
       const midX = (myRect.cx + peer.center.x) / 2;
       const midY = (myRect.cy + peer.center.y) / 2;
       shockwave.position.set(midX, -midY, 10);
@@ -916,11 +932,13 @@ function animate() {
     streamlines.forEach(l => (l.visible = false));
     if (peerOrb) peerOrb.group.visible = false;
 
-    collisionEnergy = Math.max(0, collisionEnergy - 0.5);
+    collisionEnergy = Math.max(0, collisionEnergy - 0.6);
     if (collisionEnergy <= 0 && isCatMode) {
       isCatMode = false;
       statusDot.classList.remove('cat-mode');
     }
+    collisionBar.style.width = `${collisionEnergy}%`;
+    if (energyVal) energyVal.textContent = Math.round(collisionEnergy);
   }
 
   renderer.render(scene, camera);
