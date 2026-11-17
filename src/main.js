@@ -1,40 +1,120 @@
 import * as THREE from 'three';
 
-// -------------------------------------------------------------
-// 1. Celestial Palettes
-// -------------------------------------------------------------
+// ============================================================================
+// 1. CELESTIAL PALETTES (Signature Quantum Blue from the reference image first!)
+// ============================================================================
 const PALETTES = [
-  { id: 'solar', name: 'Solar Amber', primary: '#f59e0b', secondary: '#ef4444', plasma: '#fef08a', hexPrimary: 0xf59e0b, hexSecondary: 0xef4444, hexPlasma: 0xfef08a },
-  { id: 'azure', name: 'Supernova Cyan', primary: '#06b6d4', secondary: '#2563eb', plasma: '#a5f3fc', hexPrimary: 0x06b6d4, hexSecondary: 0x2563eb, hexPlasma: 0xa5f3fc },
-  { id: 'amethyst', name: 'Amethyst Pulsar', primary: '#a855f7', secondary: '#ec4899', plasma: '#f5d0fe', hexPrimary: 0xa855f7, hexSecondary: 0xec4899, hexPlasma: 0xf5d0fe },
-  { id: 'emerald', name: 'Emerald Quasar', primary: '#10b981', secondary: '#0d9488', plasma: '#a7f3d0', hexPrimary: 0x10b981, hexSecondary: 0x0d9488, hexPlasma: 0xa7f3d0 },
-  { id: 'crimson', name: 'Crimson Eclipse', primary: '#f43f5e', secondary: '#881337', plasma: '#fecdd3', hexPrimary: 0xf43f5e, hexSecondary: 0x881337, hexPlasma: 0xfecdd3 },
-  { id: 'sakura', name: 'Sakura Nebula', primary: '#f472b6', secondary: '#9333ea', plasma: '#fce7f3', hexPrimary: 0xf472b6, hexSecondary: 0x9333ea, hexPlasma: 0xfce7f3 }
+  {
+    id: 'quantum-azure',
+    name: 'Quantum Azure',
+    primary: '#3b82f6',
+    secondary: '#1d4ed8',
+    plasma: '#93c5fd',
+    hexPrimary: 0x3b82f6,
+    hexSecondary: 0x1d4ed8,
+    hexPlasma: 0x93c5fd
+  },
+  {
+    id: 'solar-helios',
+    name: 'Solar Helios',
+    primary: '#f59e0b',
+    secondary: '#b45309',
+    plasma: '#fef08a',
+    hexPrimary: 0xf59e0b,
+    hexSecondary: 0xb45309,
+    hexPlasma: 0xfef08a
+  },
+  {
+    id: 'amethyst-pulsar',
+    name: 'Amethyst Pulsar',
+    primary: '#a855f7',
+    secondary: '#6b21a8',
+    plasma: '#f5d0fe',
+    hexPrimary: 0xa855f7,
+    hexSecondary: 0x6b21a8,
+    hexPlasma: 0xf5d0fe
+  },
+  {
+    id: 'emerald-quasar',
+    name: 'Emerald Quasar',
+    primary: '#10b981',
+    secondary: '#047857',
+    plasma: '#a7f3d0',
+    hexPrimary: 0x10b981,
+    hexSecondary: 0x047857,
+    hexPlasma: 0xa7f3d0
+  },
+  {
+    id: 'crimson-supernova',
+    name: 'Crimson Supernova',
+    primary: '#f43f5e',
+    secondary: '#9f1239',
+    plasma: '#fecdd3',
+    hexPrimary: 0xf43f5e,
+    hexSecondary: 0x9f1239,
+    hexPlasma: 0xfecdd3
+  },
+  {
+    id: 'sakura-nebula',
+    name: 'Sakura Nebula',
+    primary: '#f472b6',
+    secondary: '#831843',
+    plasma: '#fce7f3',
+    hexPrimary: 0xf472b6,
+    hexSecondary: 0x831843,
+    hexPlasma: 0xfce7f3
+  }
 ];
 
 const urlParams = new URLSearchParams(window.location.search);
 let currentPaletteIndex = urlParams.has('theme')
   ? parseInt(urlParams.get('theme')) % PALETTES.length
-  : Math.floor(Math.random() * PALETTES.length);
+  : 0; // Default to Quantum Azure to match the stunning reference photo!
 let myPalette = PALETTES[currentPaletteIndex];
 
-const windowId = 'celestial_' + Math.random().toString(36).substring(2, 8);
-let peers = new Map();
+const windowId = 'celestial_' + Math.random().toString(36).substring(2, 9);
+const peers = new Map();
 
-// -------------------------------------------------------------
-// 2. Procedural Glow Textures
-// -------------------------------------------------------------
-function createGlowTexture(colorStr) {
+// ============================================================================
+// 2. EXACT SCREEN COORDINATES ("One Screen, Many Holes" Formula)
+// ============================================================================
+// Exact formula from Avi Vashishta's blog:
+// const rect = {
+//   x: window.screenX + (window.outerWidth - window.innerWidth) / 2,
+//   y: window.screenY + (window.outerHeight - window.innerHeight),
+//   w: window.innerWidth,
+//   h: window.innerHeight,
+// };
+function getWindowRect() {
+  const sx = window.screenX !== undefined ? window.screenX : (window.screenLeft || 0);
+  const sy = window.screenY !== undefined ? window.screenY : (window.screenTop || 0);
+  const borderX = Math.max(0, (window.outerWidth - window.innerWidth) / 2);
+  const borderY = Math.max(0, window.outerHeight - window.innerHeight);
+
+  return {
+    x: sx + borderX,
+    y: sy + borderY,
+    w: Math.max(10, window.innerWidth),
+    h: Math.max(10, window.innerHeight),
+    cx: sx + borderX + window.innerWidth / 2,
+    cy: sy + borderY + window.innerHeight / 2
+  };
+}
+
+// ============================================================================
+// 3. PROCEDURAL TEXTURES (High-Definition Glowing Particles & Celestial Aura)
+// ============================================================================
+function createParticleTexture() {
   const canvas = document.createElement('canvas');
   canvas.width = 128;
   canvas.height = 128;
   const ctx = canvas.getContext('2d');
 
   const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-  gradient.addColorStop(0, colorStr);
-  gradient.addColorStop(0.25, colorStr);
-  gradient.addColorStop(0.65, 'rgba(0, 0, 0, 0.35)');
-  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+  gradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.9)');
+  gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.35)');
+  gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 128, 128);
@@ -44,207 +124,339 @@ function createGlowTexture(colorStr) {
   return texture;
 }
 
-const particleTexture = createGlowTexture('#ffffff');
-let coreGlowTexture = createGlowTexture(myPalette.primary);
+function createGlowSpriteTexture(colorHexStr) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
 
-// -------------------------------------------------------------
-// 3. Three.js Scene & Orthographic Screen-Space Setup
-// -------------------------------------------------------------
+  const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  gradient.addColorStop(0, colorHexStr);
+  gradient.addColorStop(0.25, colorHexStr);
+  gradient.addColorStop(0.65, 'rgba(0, 0, 0, 0.4)');
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 256, 256);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.premultiplyAlpha = true;
+  return texture;
+}
+
+const particleTexture = createParticleTexture();
+
+// ============================================================================
+// 4. THREE.JS SCENE & SCREEN-SPACE ORTHOGRAPHIC CAMERA
+// ============================================================================
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
 
-let width = window.innerWidth;
-let height = window.innerHeight;
-
+const initialRect = getWindowRect();
 const camera = new THREE.OrthographicCamera(
-  -width / 2, width / 2,
-  height / 2, -height / 2,
-  0.1, 2000
+  initialRect.x,
+  initialRect.x + initialRect.w,
+  -initialRect.y,
+  -(initialRect.y + initialRect.h),
+  0.1,
+  3000
 );
-camera.position.z = 500;
+camera.position.z = 1000;
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
-renderer.setSize(width, height);
+const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+  alpha: true,
+  powerPreference: 'high-performance'
+});
+renderer.setSize(initialRect.w, initialRect.h);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 container.appendChild(renderer.domElement);
 
-// -------------------------------------------------------------
-// 4. Background Starfield
-// -------------------------------------------------------------
-const bgCount = 400;
+// ============================================================================
+// 5. GLOBAL BACKGROUND STARFIELD (Fixed in Screen Space)
+// ============================================================================
+const bgCount = 600;
 const bgGeo = new THREE.BufferGeometry();
-const bgPos = new Float32Array(bgCount * 3);
+const bgPositions = new Float32Array(bgCount * 3);
 
 for (let i = 0; i < bgCount; i++) {
-  bgPos[i * 3] = (Math.random() - 0.5) * 3000;
-  bgPos[i * 3 + 1] = (Math.random() - 0.5) * 2400;
-  bgPos[i * 3 + 2] = -200 + (Math.random() - 0.5) * 150;
+  bgPositions[i * 3] = (Math.random() - 0.5) * 5000 + 1000;
+  bgPositions[i * 3 + 1] = -( (Math.random() - 0.5) * 4000 + 600 );
+  bgPositions[i * 3 + 2] = -500 + (Math.random() - 0.5) * 200;
 }
-bgGeo.setAttribute('position', new THREE.BufferAttribute(bgPos, 3));
-const bgMat = new THREE.PointsMaterial({
+bgGeo.setAttribute('position', new THREE.BufferAttribute(bgPositions, 3));
+const bgMaterial = new THREE.PointsMaterial({
   color: 0x94a3b8,
   size: 2.2,
+  map: particleTexture,
   transparent: true,
-  opacity: 0.65,
-  blending: THREE.AdditiveBlending
+  opacity: 0.5,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false
 });
-const bgStars = new THREE.Points(bgGeo, bgMat);
+const bgStars = new THREE.Points(bgGeo, bgMaterial);
 scene.add(bgStars);
 
-// -------------------------------------------------------------
-// 5. Central Celestial Star (Scaled UP 2.5x - 3x!)
-// -------------------------------------------------------------
-const celestialGroup = new THREE.Group();
-scene.add(celestialGroup);
+// ============================================================================
+// 6. BUILD HIGH-FIDELITY CELESTIAL ORB (Matching Avi Vashishta's Photo!)
+// ============================================================================
+function createCelestialOrb(palette) {
+  const orbGroup = new THREE.Group();
 
-// Luminous Core Sprite
-const spriteMaterial = new THREE.SpriteMaterial({
-  map: coreGlowTexture,
-  color: myPalette.hexPrimary,
-  transparent: true,
-  blending: THREE.AdditiveBlending,
-  opacity: 0.9
-});
-const coreSprite = new THREE.Sprite(spriteMaterial);
-coreSprite.scale.set(360, 360, 1); // Large prominent glowing aura!
-celestialGroup.add(coreSprite);
+  // A) Ambient Soft Halo Glow
+  const glowMat = new THREE.SpriteMaterial({
+    map: createGlowSpriteTexture(palette.primary),
+    color: palette.hexPrimary,
+    transparent: true,
+    opacity: 0.45,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  const haloSprite = new THREE.Sprite(glowMat);
+  haloSprite.scale.set(480, 480, 1); // Large majestic halo
+  orbGroup.add(haloSprite);
 
-// Dense Particle Core (500 particles)
-const coreCount = 500;
-const coreGeometry = new THREE.BufferGeometry();
-const corePositions = new Float32Array(coreCount * 3);
-const coreOriginalSphere = [];
-const coreCatTarget = [];
+  // B) Dense Core Volumetric Star Cloud (2,500 particles)
+  const coreCount = 2500;
+  const coreGeo = new THREE.BufferGeometry();
+  const corePositions = new Float32Array(coreCount * 3);
+  const coreOriginalSphere = [];
+  const coreCatTarget = [];
 
-// Precompute Cat Shape Points for Morphing
-for (let i = 0; i < coreCount; i++) {
-  // Spherical orbit baseline
-  const theta = Math.random() * Math.PI * 2;
-  const phi = Math.acos(Math.random() * 2 - 1);
-  const r = 40 + Math.random() * 35; // Larger core radius
-  const sx = r * Math.sin(phi) * Math.cos(theta);
-  const sy = r * Math.sin(phi) * Math.sin(theta);
-  const sz = r * Math.cos(phi);
+  const CORE_RADIUS = 135; // Rich prominent orb size
 
-  corePositions[i * 3] = sx;
-  corePositions[i * 3 + 1] = sy;
-  corePositions[i * 3 + 2] = sz;
-  coreOriginalSphere.push(new THREE.Vector3(sx, sy, sz));
+  for (let i = 0; i < coreCount; i++) {
+    // 1. Concentrated Spherical distribution
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(Math.random() * 2 - 1);
+    const r = CORE_RADIUS * Math.pow(Math.random(), 0.65);
 
-  // --- Cat Constellation Target Coordinates ---
-  let cx = 0, cy = 0, cz = (Math.random() - 0.5) * 15;
-  const pType = i % 10;
+    const sx = r * Math.sin(phi) * Math.cos(theta);
+    const sy = r * Math.sin(phi) * Math.sin(theta);
+    const sz = r * Math.cos(phi);
 
-  if (pType < 4) {
-    // Head & cute round cheeks
-    const headAngle = Math.random() * Math.PI * 2;
-    const headRadius = 75 + Math.random() * 20;
-    cx = Math.cos(headAngle) * headRadius;
-    cy = Math.sin(headAngle) * (headRadius * 0.85); // cute squishy face
-  } else if (pType === 4 || pType === 5) {
-    // Left Pointy Cat Ear
-    const u = Math.random();
-    const v = Math.random();
-    const bx = -65 + u * 40;
-    const by = 55 + u * 20;
-    cx = THREE.MathUtils.lerp(bx, -55, v);
-    cy = THREE.MathUtils.lerp(by, 145, v);
-  } else if (pType === 6 || pType === 7) {
-    // Right Pointy Cat Ear
-    const u = Math.random();
-    const v = Math.random();
-    const bx = 25 + u * 40;
-    const by = 75 - u * 20;
-    cx = THREE.MathUtils.lerp(bx, 55, v);
-    cy = THREE.MathUtils.lerp(by, 145, v);
-  } else if (pType === 8) {
-    // Whiskers (Left & Right)
-    const side = Math.random() > 0.5 ? 1 : -1;
-    const wIndex = Math.floor(Math.random() * 3);
-    const wLen = 30 + Math.random() * 65;
-    const wYOffset = (wIndex - 1) * 14;
-    cx = side * (45 + wLen);
-    cy = -5 + wYOffset + (Math.random() - 0.5) * 6;
-  } else {
-    // Eyes & Nose
-    const eyeSide = Math.random() > 0.5 ? 1 : -1;
-    if (Math.random() > 0.3) {
-      cx = eyeSide * (32 + (Math.random() - 0.5) * 10);
-      cy = 20 + (Math.random() - 0.5) * 8;
+    corePositions[i * 3] = sx;
+    corePositions[i * 3 + 1] = sy;
+    corePositions[i * 3 + 2] = sz;
+    coreOriginalSphere.push(new THREE.Vector3(sx, sy, sz));
+
+    // 2. Cat Constellation Target Coordinates
+    let cx = 0, cy = 0, cz = (Math.random() - 0.5) * 20;
+    const catGroup = i % 100;
+
+    if (catGroup < 45) {
+      // Cat Head & Round Cute Cheeks
+      const angle = Math.random() * Math.PI * 2;
+      const rad = 85 * Math.pow(Math.random(), 0.5);
+      cx = Math.cos(angle) * (rad * 1.15);
+      cy = Math.sin(angle) * (rad * 0.95) - 5;
+    } else if (catGroup < 60) {
+      // Left Pointy Cat Ear
+      const u = Math.random();
+      const v = Math.random();
+      const baseL = new THREE.Vector2(-75, 55);
+      const baseR = new THREE.Vector2(-25, 75);
+      const tip = new THREE.Vector2(-60, 155);
+      const w0 = 1 - Math.sqrt(u);
+      const w1 = Math.sqrt(u) * (1 - v);
+      const w2 = Math.sqrt(u) * v;
+      cx = w0 * baseL.x + w1 * baseR.x + w2 * tip.x;
+      cy = w0 * baseL.y + w1 * baseR.y + w2 * tip.y;
+    } else if (catGroup < 75) {
+      // Right Pointy Cat Ear
+      const u = Math.random();
+      const v = Math.random();
+      const baseL = new THREE.Vector2(25, 75);
+      const baseR = new THREE.Vector2(75, 55);
+      const tip = new THREE.Vector2(60, 155);
+      const w0 = 1 - Math.sqrt(u);
+      const w1 = Math.sqrt(u) * (1 - v);
+      const w2 = Math.sqrt(u) * v;
+      cx = w0 * baseL.x + w1 * baseR.x + w2 * tip.x;
+      cy = w0 * baseL.y + w1 * baseR.y + w2 * tip.y;
+    } else if (catGroup < 88) {
+      // Whiskers (3 left, 3 right)
+      const isRight = (catGroup % 2 === 0);
+      const side = isRight ? 1 : -1;
+      const whiskerRow = Math.floor(Math.random() * 3);
+      const t = Math.random();
+      const startX = side * 35;
+      const startY = -10 + (whiskerRow - 1) * 12;
+      const endX = side * (105 + Math.random() * 35);
+      const endY = startY + (whiskerRow === 0 ? 12 : whiskerRow === 1 ? -4 : -20);
+      cx = THREE.MathUtils.lerp(startX, endX, t);
+      cy = THREE.MathUtils.lerp(startY, endY, t) + Math.sin(t * Math.PI) * (side * 4);
+    } else if (catGroup < 94) {
+      // Cat Eyes
+      const eyeSide = (catGroup % 2 === 0) ? 1 : -1;
+      const eyeCenter = new THREE.Vector2(eyeSide * 35, 18);
+      const eyeAngle = Math.random() * Math.PI * 2;
+      const eyeR = Math.random() * 12;
+      cx = eyeCenter.x + Math.cos(eyeAngle) * eyeR * 1.3;
+      cy = eyeCenter.y + Math.sin(eyeAngle) * eyeR * 0.75;
+    } else if (catGroup < 97) {
+      // Cute Button Nose & Mouth
+      const u = Math.random();
+      if (u < 0.6) {
+        cx = (Math.random() - 0.5) * 12;
+        cy = -12 + (Math.random() - 0.5) * 8;
+      } else {
+        const side = Math.random() > 0.5 ? 1 : -1;
+        const mt = Math.random();
+        cx = side * (mt * 16);
+        cy = -20 - Math.sin(mt * Math.PI) * 5;
+      }
     } else {
-      // Little triangle nose
-      cx = (Math.random() - 0.5) * 12;
-      cy = -8 + (Math.random() - 0.5) * 8;
+      // Twinkling Stardust
+      const sAngle = Math.random() * Math.PI * 2;
+      const sR = 120 + Math.random() * 60;
+      cx = Math.cos(sAngle) * sR;
+      cy = Math.sin(sAngle) * sR;
+    }
+
+    coreCatTarget.push(new THREE.Vector3(cx, cy, cz));
+  }
+
+  coreGeo.setAttribute('position', new THREE.BufferAttribute(corePositions, 3));
+  const coreMat = new THREE.PointsMaterial({
+    color: palette.hexPlasma,
+    size: 2.8,
+    map: particleTexture,
+    transparent: true,
+    opacity: 0.95,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  const corePoints = new THREE.Points(coreGeo, coreMat);
+  orbGroup.add(corePoints);
+
+  // C) 14 3D Magnetic Dipole Flux Loops (1,800 particles)
+  const loopCount = 14;
+  const particlesPerLoop = 130;
+  const fluxTotal = loopCount * particlesPerLoop;
+  const fluxGeo = new THREE.BufferGeometry();
+  const fluxPositions = new Float32Array(fluxTotal * 3);
+
+  const loopsData = [];
+  for (let l = 0; l < loopCount; l++) {
+    const radiusX = 140 + (l % 7) * 20;
+    const radiusY = radiusX * (0.65 + Math.random() * 0.25);
+    const inclination = (l / loopCount) * Math.PI + (Math.random() - 0.5) * 0.3;
+    const azimuth = (l * 0.45) % (Math.PI * 2);
+    const speed = 0.4 + Math.random() * 0.6;
+    const direction = l % 2 === 0 ? 1 : -1;
+
+    const rotEuler = new THREE.Euler(inclination, azimuth, (l * 0.3));
+    const uVec = new THREE.Vector3(1, 0, 0).applyEuler(rotEuler);
+    const vVec = new THREE.Vector3(0, 1, 0).applyEuler(rotEuler);
+
+    loopsData.push({ radiusX, radiusY, uVec, vVec, speed, direction });
+  }
+
+  const fluxOffsets = [];
+  for (let l = 0; l < loopCount; l++) {
+    for (let p = 0; p < particlesPerLoop; p++) {
+      fluxOffsets.push({
+        loopIdx: l,
+        baseAngle: (p / particlesPerLoop) * Math.PI * 2 + (Math.random() - 0.5) * 0.05,
+        speedMultiplier: 0.95 + Math.random() * 0.1
+      });
     }
   }
 
-  coreCatTarget.push(new THREE.Vector3(cx, cy, cz));
+  fluxGeo.setAttribute('position', new THREE.BufferAttribute(fluxPositions, 3));
+  const fluxMat = new THREE.PointsMaterial({
+    color: palette.hexPrimary,
+    size: 2.4,
+    map: particleTexture,
+    transparent: true,
+    opacity: 0.85,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  const fluxPoints = new THREE.Points(fluxGeo, fluxMat);
+  orbGroup.add(fluxPoints);
+
+  // D) Cat Constellation Hologram Lines
+  const catLineIndices = [
+    new THREE.Vector3(-75, 55, 0), new THREE.Vector3(-60, 155, 0),
+    new THREE.Vector3(-60, 155, 0), new THREE.Vector3(-25, 75, 0),
+    new THREE.Vector3(-25, 75, 0), new THREE.Vector3(-75, 55, 0),
+    new THREE.Vector3(25, 75, 0), new THREE.Vector3(60, 155, 0),
+    new THREE.Vector3(60, 155, 0), new THREE.Vector3(75, 55, 0),
+    new THREE.Vector3(75, 55, 0), new THREE.Vector3(25, 75, 0),
+    new THREE.Vector3(-25, 75, 0), new THREE.Vector3(25, 75, 0),
+    new THREE.Vector3(-35, -2, 0), new THREE.Vector3(-125, 12, 0),
+    new THREE.Vector3(-35, -12, 0), new THREE.Vector3(-135, -12, 0),
+    new THREE.Vector3(-35, -22, 0), new THREE.Vector3(-125, -34, 0),
+    new THREE.Vector3(35, -2, 0), new THREE.Vector3(125, 12, 0),
+    new THREE.Vector3(35, -12, 0), new THREE.Vector3(135, -12, 0),
+    new THREE.Vector3(35, -22, 0), new THREE.Vector3(125, -34, 0),
+  ];
+  const catLineGeo = new THREE.BufferGeometry().setFromPoints(catLineIndices);
+  const catLineMat = new THREE.LineBasicMaterial({
+    color: 0xf472b6,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending
+  });
+  const catLines = new THREE.LineSegments(catLineGeo, catLineMat);
+  orbGroup.add(catLines);
+
+  return {
+    group: orbGroup,
+    haloSprite,
+    corePoints,
+    coreGeo,
+    coreOriginalSphere,
+    coreCatTarget,
+    coreMat,
+    fluxPoints,
+    fluxGeo,
+    fluxMat,
+    fluxOffsets,
+    loopsData,
+    catLines,
+    catLineMat,
+    currentPaletteId: palette.id,
+    updatePalette(newPal) {
+      this.currentPaletteId = newPal.id;
+      haloSprite.material.map = createGlowSpriteTexture(newPal.primary);
+      haloSprite.material.color.setHex(newPal.hexPrimary);
+      coreMat.color.setHex(newPal.hexPlasma);
+      fluxMat.color.setHex(newPal.hexPrimary);
+    }
+  };
 }
 
-coreGeometry.setAttribute('position', new THREE.BufferAttribute(corePositions, 3));
+// Create Primary Orb (This Window's Orb)
+const myOrb = createCelestialOrb(myPalette);
+scene.add(myOrb.group);
 
-const coreMaterial = new THREE.PointsMaterial({
-  color: myPalette.hexPlasma,
-  size: 5.5,
-  map: particleTexture,
-  transparent: true,
-  blending: THREE.AdditiveBlending,
-  opacity: 0.95,
-  depthWrite: false
-});
-const coreParticles = new THREE.Points(coreGeometry, coreMaterial);
-celestialGroup.add(coreParticles);
+// Create Companion Orb (For Peer Window when Entangled)
+let peerOrb = null;
 
-// Accretion Disk Rings (650 particles)
-const diskCount = 650;
-const diskGeometry = new THREE.BufferGeometry();
-const diskPositions = new Float32Array(diskCount * 3);
+// ============================================================================
+// 7. ENTANGLED DIPOLE STREAM & CONTINUOUS GRAVITATIONAL FIELD LINES
+// ============================================================================
+const bridgeParticleCount = 1000;
+const bridgeGeo = new THREE.BufferGeometry();
+const bridgePositions = new Float32Array(bridgeParticleCount * 3);
+const bridgeColors = new Float32Array(bridgeParticleCount * 3);
+const bridgeProgress = new Float32Array(bridgeParticleCount);
+const bridgeSpeeds = new Float32Array(bridgeParticleCount);
+const bridgeSpread = new Float32Array(bridgeParticleCount);
 
-for (let i = 0; i < diskCount; i++) {
-  const r = 90 + Math.random() * 110;
-  const angle = Math.random() * Math.PI * 2;
-  diskPositions[i * 3] = Math.cos(angle) * r;
-  diskPositions[i * 3 + 1] = Math.sin(angle) * r * 0.32;
-  diskPositions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+for (let i = 0; i < bridgeParticleCount; i++) {
+  bridgeProgress[i] = Math.random();
+  bridgeSpeeds[i] = 0.003 + Math.random() * 0.008;
+  bridgeSpread[i] = (Math.random() - 0.5) * 50;
 }
 
-diskGeometry.setAttribute('position', new THREE.BufferAttribute(diskPositions, 3));
-
-const diskMaterial = new THREE.PointsMaterial({
-  color: myPalette.hexSecondary,
-  size: 4,
-  map: particleTexture,
-  transparent: true,
-  blending: THREE.AdditiveBlending,
-  opacity: 0.85,
-  depthWrite: false
-});
-const diskParticles = new THREE.Points(diskGeometry, diskMaterial);
-diskParticles.rotation.z = Math.PI / 6;
-celestialGroup.add(diskParticles);
-
-// -------------------------------------------------------------
-// 6. Entangled Bridge Stream & Continuous Field Lines
-// -------------------------------------------------------------
-const streamCount = 700;
-const streamGeometry = new THREE.BufferGeometry();
-const streamPositions = new Float32Array(streamCount * 3);
-const streamColors = new Float32Array(streamCount * 3);
-const streamProgress = new Float32Array(streamCount);
-const streamSpeed = new Float32Array(streamCount);
-const streamLateralOffset = new Float32Array(streamCount);
-
-for (let i = 0; i < streamCount; i++) {
-  streamProgress[i] = Math.random();
-  streamSpeed[i] = 0.003 + Math.random() * 0.007;
-  streamLateralOffset[i] = (Math.random() - 0.5) * 45;
-}
-
-streamGeometry.setAttribute('position', new THREE.BufferAttribute(streamPositions, 3));
-streamGeometry.setAttribute('color', new THREE.BufferAttribute(streamColors, 3));
-
-const streamMaterial = new THREE.PointsMaterial({
-  size: 5.5,
+bridgeGeo.setAttribute('position', new THREE.BufferAttribute(bridgePositions, 3));
+bridgeGeo.setAttribute('color', new THREE.BufferAttribute(bridgeColors, 3));
+const bridgeMaterial = new THREE.PointsMaterial({
+  size: 3.2,
   map: particleTexture,
   vertexColors: true,
   transparent: true,
@@ -252,69 +464,61 @@ const streamMaterial = new THREE.PointsMaterial({
   opacity: 0.95,
   depthWrite: false
 });
-const streamParticles = new THREE.Points(streamGeometry, streamMaterial);
-scene.add(streamParticles);
+const bridgeParticles = new THREE.Points(bridgeGeo, bridgeMaterial);
+bridgeParticles.visible = false;
+scene.add(bridgeParticles);
 
-// 5 Continuous Gravitational Field Lines
-const lineCount = 5;
-const fieldLines = [];
-const lineMaterials = [];
+// Continuous Gravitational Streamlines
+const streamCount = 7;
+const streamlines = [];
+const streamlineMaterials = [];
 
-for (let i = 0; i < lineCount; i++) {
+for (let i = 0; i < streamCount; i++) {
   const lineMat = new THREE.LineBasicMaterial({
     color: myPalette.hexPrimary,
     transparent: true,
-    opacity: 0.45,
+    opacity: 0.35,
     blending: THREE.AdditiveBlending
   });
   const lineGeo = new THREE.BufferGeometry();
   const line = new THREE.Line(lineGeo, lineMat);
+  line.visible = false;
   scene.add(line);
-  fieldLines.push(line);
-  lineMaterials.push(lineMat);
+  streamlines.push(line);
+  streamlineMaterials.push(lineMat);
 }
 
-// Shockwave Ring
-const shockwaveRingGeo = new THREE.RingGeometry(1, 4, 64);
-const shockwaveRingMat = new THREE.MeshBasicMaterial({
+// Shockwave Ring on Super Collision
+const shockwaveGeo = new THREE.RingGeometry(1, 6, 64);
+const shockwaveMat = new THREE.MeshBasicMaterial({
   color: 0xffffff,
   side: THREE.DoubleSide,
   transparent: true,
   opacity: 0,
   blending: THREE.AdditiveBlending
 });
-const shockwaveRing = new THREE.Mesh(shockwaveRingGeo, shockwaveRingMat);
-scene.add(shockwaveRing);
+const shockwave = new THREE.Mesh(shockwaveGeo, shockwaveMat);
+shockwave.visible = false;
+scene.add(shockwave);
 let shockwaveScale = 1;
 
-// -------------------------------------------------------------
-// 7. Exact Physical Screen-Space Coordinate Engine
-// -------------------------------------------------------------
-function getExactCanvasCenter() {
-  // Compensate accurately for Windows/browser titlebars, URL bars and borders!
-  const borderX = Math.max(0, (window.outerWidth - window.innerWidth) / 2);
-  const chromeTop = Math.max(0, window.outerHeight - window.innerHeight - borderX);
-
-  const sx = (window.screenX ?? window.screenLeft ?? 0) + borderX;
-  const sy = (window.screenY ?? window.screenTop ?? 0) + chromeTop;
-
-  const cx = sx + window.innerWidth / 2;
-  const cy = sy + window.innerHeight / 2;
-
-  return { cx, cy, sx, sy };
-}
-
-// Broadcast Channel
+// ============================================================================
+// 8. MULTI-WINDOW COMMUNICATION & STATE SYNCHRONIZATION
+// ============================================================================
 const channel = new BroadcastChannel('celestial_collision_network');
 
+let isCatMode = false;
+let collisionEnergy = 0; // 0% to 100%
+
 function broadcastState() {
-  const coords = getExactCanvasCenter();
+  const rect = getWindowRect();
   const state = {
     type: 'sync',
     id: windowId,
-    centerX: coords.cx,
-    centerY: coords.cy,
+    rect: { x: rect.x, y: rect.y, w: rect.w, h: rect.h },
+    center: { x: rect.cx, y: rect.cy },
     palette: myPalette,
+    isCat: isCatMode,
     timestamp: performance.now()
   };
 
@@ -354,9 +558,9 @@ function prunePeers() {
   }
 }
 
-// -------------------------------------------------------------
-// 8. Dynamic Audio Engine (Web Audio API Synthesizer)
-// -------------------------------------------------------------
+// ============================================================================
+// 9. DYNAMIC AUDIO ENGINE (Web Audio Synthesizer)
+// ============================================================================
 let audioCtx = null;
 let droneOsc = null;
 let droneGain = null;
@@ -373,10 +577,10 @@ function initAudio() {
   filterNode = audioCtx.createBiquadFilter();
 
   droneOsc.type = 'triangle';
-  droneOsc.frequency.setValueAtTime(70, audioCtx.currentTime);
+  droneOsc.frequency.setValueAtTime(65, audioCtx.currentTime);
 
   filterNode.type = 'lowpass';
-  filterNode.frequency.setValueAtTime(250, audioCtx.currentTime);
+  filterNode.frequency.setValueAtTime(220, audioCtx.currentTime);
 
   droneGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
 
@@ -390,12 +594,12 @@ function initAudio() {
 
 function updateAudio(distance) {
   if (!audioCtx || !isAudioActive) return;
-  const normDist = Math.max(0, Math.min(1, distance / 1200));
-  const targetFreq = 220 + (1 - normDist) * 900;
+  const normDist = Math.max(0, Math.min(1, distance / 1400));
+  const targetFreq = 180 + (1 - normDist) * 850;
   filterNode.frequency.setTargetAtTime(targetFreq, audioCtx.currentTime, 0.1);
 }
 
-function playCatMeowChime() {
+function playCatChime() {
   if (!audioCtx) initAudio();
   if (!audioCtx) return;
 
@@ -403,74 +607,24 @@ function playCatMeowChime() {
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
 
-  // Cute playful meow glissando
   osc.type = 'sine';
-  osc.frequency.setValueAtTime(659.25, now); // E5
-  osc.frequency.exponentialRampToValueAtTime(880, now + 0.15); // A5
-  osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.35); // G5
+  osc.frequency.setValueAtTime(587.33, now); // D5
+  osc.frequency.exponentialRampToValueAtTime(880.0, now + 0.18); // A5
+  osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.38); // G5
 
-  gain.gain.setValueAtTime(0.18, now);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+  gain.gain.setValueAtTime(0.2, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
 
   osc.connect(gain);
   gain.connect(audioCtx.destination);
 
   osc.start(now);
-  osc.stop(now + 0.4);
+  osc.stop(now + 0.45);
 }
 
-// -------------------------------------------------------------
-// 9. Interactive Palette Switching & Cat Mode Logic
-// -------------------------------------------------------------
-let isCatMode = false;
-let collisionEnergy = 0; // 0% to 100%
-
-function applyPalette(palette) {
-  myPalette = palette;
-  coreGlowTexture = createGlowTexture(myPalette.primary);
-
-  spriteMaterial.map = coreGlowTexture;
-  spriteMaterial.color.setHex(myPalette.hexPrimary);
-  coreMaterial.color.setHex(myPalette.hexPlasma);
-  diskMaterial.color.setHex(myPalette.hexSecondary);
-
-  lineMaterials.forEach(mat => mat.color.setHex(myPalette.hexPrimary));
-
-  document.querySelectorAll('.palette-swatch').forEach(el => {
-    el.classList.toggle('active', el.dataset.id === palette.id);
-  });
-}
-
-function triggerCatConstellation(manual = false) {
-  isCatMode = !isCatMode;
-  const catToast = document.getElementById('cat-toast');
-  const catBtn = document.getElementById('cat-btn');
-
-  if (isCatMode) {
-    statusDot.classList.add('cat-mode');
-    catToast.classList.add('active');
-    catBtn.textContent = '🌟 Star Shape';
-    playCatMeowChime();
-    setTimeout(() => catToast.classList.remove('active'), 3200);
-  } else {
-    statusDot.classList.remove('cat-mode');
-    catBtn.textContent = '🐱 Cat Shape';
-  }
-}
-
-// Populate Palette Swatches
-const pickerContainer = document.getElementById('palette-picker');
-PALETTES.forEach((p, idx) => {
-  const swatch = document.createElement('div');
-  swatch.className = `palette-swatch ${p.id === myPalette.id ? 'active' : ''}`;
-  swatch.dataset.id = p.id;
-  swatch.style.backgroundColor = p.primary;
-  swatch.title = p.name;
-  swatch.addEventListener('click', () => applyPalette(p));
-  pickerContainer.appendChild(swatch);
-});
-
-// Controls & Buttons
+// ============================================================================
+// 10. UI CONTROLS & PALETTE SWITCHER
+// ============================================================================
 const statusDot = document.getElementById('status-dot');
 const statusText = document.getElementById('status-text');
 const metricsOverlay = document.getElementById('metrics-overlay');
@@ -480,14 +634,54 @@ const collisionBar = document.getElementById('collision-bar');
 const spawnBtn = document.getElementById('spawn-btn');
 const soundBtn = document.getElementById('sound-btn');
 const catBtn = document.getElementById('cat-btn');
+const catToast = document.getElementById('cat-toast');
+
+function applyPalette(pal) {
+  myPalette = pal;
+  myOrb.updatePalette(pal);
+
+  streamlineMaterials.forEach(m => m.color.setHex(pal.hexPrimary));
+
+  document.querySelectorAll('.palette-swatch').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === pal.id);
+  });
+}
+
+function triggerCatConstellation(manual = false) {
+  isCatMode = !isCatMode;
+
+  if (isCatMode) {
+    statusDot.classList.add('cat-mode');
+    catToast.classList.add('active');
+    catBtn.textContent = '🌟 Star Shape';
+    playCatChime();
+    setTimeout(() => catToast.classList.remove('active'), 3200);
+  } else {
+    statusDot.classList.remove('cat-mode');
+    catBtn.textContent = '🐱 Cat Shape';
+  }
+}
+
+// Render Palette Swatches
+const pickerContainer = document.getElementById('palette-picker');
+PALETTES.forEach((p) => {
+  const swatch = document.createElement('div');
+  swatch.className = `palette-swatch ${p.id === myPalette.id ? 'active' : ''}`;
+  swatch.dataset.id = p.id;
+  swatch.style.backgroundColor = p.primary;
+  swatch.title = p.name;
+  swatch.addEventListener('click', () => applyPalette(p));
+  pickerContainer.appendChild(swatch);
+});
 
 catBtn.addEventListener('click', () => triggerCatConstellation(true));
 
+// Spawn companion window immediately to the right of this window
 spawnBtn.addEventListener('click', () => {
-  const coords = getExactCanvasCenter();
+  const rect = getWindowRect();
   const nextThemeIdx = (currentPaletteIndex + 1) % PALETTES.length;
-  const newLeft = coords.sx + window.innerWidth + 20;
-  const newTop = coords.sy;
+  const newLeft = rect.x + rect.w + 16;
+  const newTop = rect.y;
 
   window.open(
     `${window.location.origin}${window.location.pathname}?theme=${nextThemeIdx}`,
@@ -514,22 +708,32 @@ soundBtn.addEventListener('click', () => {
 });
 
 window.addEventListener('resize', () => {
-  width = window.innerWidth;
-  height = window.innerHeight;
-
-  camera.left = -width / 2;
-  camera.right = width / 2;
-  camera.top = height / 2;
-  camera.bottom = -height / 2;
+  const rect = getWindowRect();
+  camera.left = rect.x;
+  camera.right = rect.x + rect.w;
+  camera.top = -rect.y;
+  camera.bottom = -(rect.y + rect.h);
   camera.updateProjectionMatrix();
 
-  renderer.setSize(width, height);
+  renderer.setSize(rect.w, rect.h);
 });
 
-// -------------------------------------------------------------
-// 10. Main Loop with Continuous Multi-Window Math
-// -------------------------------------------------------------
-let clock = new THREE.Clock();
+// Spacebar cycles colors, C toggles cat mode
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    currentPaletteIndex = (currentPaletteIndex + 1) % PALETTES.length;
+    applyPalette(PALETTES[currentPaletteIndex]);
+  } else if (e.code === 'KeyC') {
+    e.preventDefault();
+    triggerCatConstellation(true);
+  }
+});
+
+// ============================================================================
+// 11. MAIN ANIMATION LOOP (Global Screen Space Math)
+// ============================================================================
+const clock = new THREE.Clock();
 
 function animate() {
   requestAnimationFrame(animate);
@@ -538,63 +742,131 @@ function animate() {
   broadcastState();
   prunePeers();
 
-  const myCoords = getExactCanvasCenter();
+  // 1. Update Camera to follow this window's exact screen position
+  const myRect = getWindowRect();
+  camera.left = myRect.x;
+  camera.right = myRect.x + myRect.w;
+  camera.top = -myRect.y;
+  camera.bottom = -(myRect.y + myRect.h);
+  camera.updateProjectionMatrix();
+
+  // 2. Position My Celestial Orb at this window's exact screen center
+  myOrb.group.position.set(myRect.cx, -myRect.cy, 0);
+
+  // 3. Animate My Orb Particles (Sphere <-> Cat Morphing)
+  const corePosArr = myOrb.coreGeo.attributes.position.array;
+  for (let i = 0; i < myOrb.coreOriginalSphere.length; i++) {
+    const target = isCatMode ? myOrb.coreCatTarget[i] : myOrb.coreOriginalSphere[i];
+    corePosArr[i * 3] += (target.x - corePosArr[i * 3]) * 0.08;
+    corePosArr[i * 3 + 1] += (target.y - corePosArr[i * 3 + 1]) * 0.08;
+    corePosArr[i * 3 + 2] += (target.z - corePosArr[i * 3 + 2]) * 0.08;
+  }
+  myOrb.coreGeo.attributes.position.needsUpdate = true;
+
+  // Animate Magnetic Dipole Loops (Avi Vashishta's signature flux orbits!)
+  const fluxPosArr = myOrb.fluxGeo.attributes.position.array;
+  for (let i = 0; i < myOrb.fluxOffsets.length; i++) {
+    const item = myOrb.fluxOffsets[i];
+    const loop = myOrb.loopsData[item.loopIdx];
+
+    const theta = item.baseAngle + (elapsedTime * loop.speed * loop.direction * item.speedMultiplier);
+    const px = Math.cos(theta) * loop.radiusX;
+    const py = Math.sin(theta) * loop.radiusY;
+
+    const p3d = new THREE.Vector3()
+      .addScaledVector(loop.uVec, px)
+      .addScaledVector(loop.vVec, py);
+
+    fluxPosArr[i * 3] = p3d.x;
+    fluxPosArr[i * 3 + 1] = p3d.y;
+    fluxPosArr[i * 3 + 2] = p3d.z;
+  }
+  myOrb.fluxGeo.attributes.position.needsUpdate = true;
+
+  // Cat line opacity & gentle constellation breathing
+  if (isCatMode) {
+    myOrb.catLineMat.opacity = Math.min(0.85, myOrb.catLineMat.opacity + 0.05);
+    const breath = 1 + Math.sin(elapsedTime * 2.5) * 0.03;
+    myOrb.corePoints.scale.set(breath, breath, 1);
+    myOrb.catLines.scale.set(breath, breath, 1);
+    myOrb.haloSprite.scale.set(450 * breath, 450 * breath, 1);
+  } else {
+    myOrb.catLineMat.opacity = Math.max(0, myOrb.catLineMat.opacity - 0.05);
+    myOrb.corePoints.scale.set(1, 1, 1);
+    myOrb.catLines.scale.set(1, 1, 1);
+    const pulse = 1 + Math.sin(elapsedTime * 2) * 0.05;
+    myOrb.haloSprite.scale.set(480 * pulse, 480 * pulse, 1);
+    myOrb.group.rotation.z = elapsedTime * 0.12;
+  }
+
+  // 4. Multi-Window Physics & Screen-Space Entanglement
   const activePeers = Array.from(peers.values());
 
-  // 1. Celestial Core Dynamics & Cat Morphing
-  const corePosAttr = coreGeometry.attributes.position;
-  const coreArr = corePosAttr.array;
-
-  for (let i = 0; i < coreCount; i++) {
-    const target = isCatMode ? coreCatTarget[i] : coreOriginalSphere[i];
-    
-    // Smooth lerp morphing
-    coreArr[i * 3] += (target.x - coreArr[i * 3]) * 0.08;
-    coreArr[i * 3 + 1] += (target.y - coreArr[i * 3 + 1]) * 0.08;
-    coreArr[i * 3 + 2] += (target.z - coreArr[i * 3 + 2]) * 0.08;
-  }
-  corePosAttr.needsUpdate = true;
-
-  if (!isCatMode) {
-    celestialGroup.rotation.z = elapsedTime * 0.15;
-    diskParticles.rotation.z = elapsedTime * 0.4;
-  } else {
-    // Gentle hovering breath in cat mode
-    celestialGroup.rotation.z = Math.sin(elapsedTime * 1.5) * 0.04;
-    diskParticles.rotation.z = elapsedTime * 0.2;
-  }
-
-  // Aura pulse
-  const pulse = 1 + Math.sin(elapsedTime * 2.8) * 0.06;
-  coreSprite.scale.set(360 * pulse, 360 * pulse, 1);
-
-  // Background stars
-  bgStars.rotation.z = elapsedTime * 0.008;
-
-  // 2. Multi-Window Entangled Physics
   if (activePeers.length > 0) {
     const peer = activePeers[0];
 
-    // Vector in Global Screen Space
-    const globalDeltaX = peer.centerX - myCoords.cx;
-    const globalDeltaY = peer.centerY - myCoords.cy;
-    const dist = Math.hypot(globalDeltaX, globalDeltaY);
+    // Ensure peer orb exists
+    if (!peerOrb) {
+      peerOrb = createCelestialOrb(peer.palette);
+      scene.add(peerOrb.group);
+    }
+    // Update peer palette if changed
+    if (peerOrb.currentPaletteId !== peer.palette.id) {
+      peerOrb.updatePalette(peer.palette);
+    }
 
-    // Three.js local space (Y is flipped!)
-    const localTargetX = globalDeltaX;
-    const localTargetY = -globalDeltaY;
+    // Update peer orb position in Global Screen Space
+    peerOrb.group.position.set(peer.center.x, -peer.center.y, 0);
+    peerOrb.group.visible = true;
+
+    // Animate peer orb core particles (Sphere <-> Cat Morphing based on peer's cat state)
+    const pCorePos = peerOrb.coreGeo.attributes.position.array;
+    for (let i = 0; i < peerOrb.coreOriginalSphere.length; i++) {
+      const target = peer.isCat ? peerOrb.coreCatTarget[i] : peerOrb.coreOriginalSphere[i];
+      pCorePos[i * 3] += (target.x - pCorePos[i * 3]) * 0.08;
+      pCorePos[i * 3 + 1] += (target.y - pCorePos[i * 3 + 1]) * 0.08;
+      pCorePos[i * 3 + 2] += (target.z - pCorePos[i * 3 + 2]) * 0.08;
+    }
+    peerOrb.coreGeo.attributes.position.needsUpdate = true;
+
+    // Animate peer orb magnetic loops
+    const pFluxPos = peerOrb.fluxGeo.attributes.position.array;
+    for (let i = 0; i < peerOrb.fluxOffsets.length; i++) {
+      const item = peerOrb.fluxOffsets[i];
+      const loop = peerOrb.loopsData[item.loopIdx];
+      const theta = item.baseAngle + (elapsedTime * loop.speed * loop.direction * item.speedMultiplier);
+      const px = Math.cos(theta) * loop.radiusX;
+      const py = Math.sin(theta) * loop.radiusY;
+      const p3d = new THREE.Vector3().addScaledVector(loop.uVec, px).addScaledVector(loop.vVec, py);
+      pFluxPos[i * 3] = p3d.x;
+      pFluxPos[i * 3 + 1] = p3d.y;
+      pFluxPos[i * 3 + 2] = p3d.z;
+    }
+    peerOrb.fluxGeo.attributes.position.needsUpdate = true;
+
+    if (peer.isCat) {
+      peerOrb.catLineMat.opacity = Math.min(0.85, peerOrb.catLineMat.opacity + 0.05);
+    } else {
+      peerOrb.catLineMat.opacity = Math.max(0, peerOrb.catLineMat.opacity - 0.05);
+      peerOrb.group.rotation.z = elapsedTime * 0.12;
+    }
+
+    // Vector in physical screen pixels
+    const dx = peer.center.x - myRect.cx;
+    const dy = peer.center.y - myRect.cy;
+    const dist = Math.hypot(dx, dy) || 1;
 
     // UI Updates
     statusDot.classList.add('connected');
     statusText.textContent = `${activePeers.length + 1} Celestial Cores Entangled`;
     metricsOverlay.classList.add('visible');
     distVal.textContent = Math.round(dist);
-    tensionVal.textContent = (1400 / Math.max(100, dist)).toFixed(2);
+    tensionVal.textContent = (1600 / Math.max(120, dist)).toFixed(2);
 
     updateAudio(dist);
 
-    // Collision Energy Accumulation
-    if (dist < 260) {
+    // Collision Overload -> Cat Mode Activation!
+    if (dist < 280) {
       collisionEnergy = Math.min(100, collisionEnergy + 1.2);
       if (collisionEnergy >= 100 && !isCatMode) {
         triggerCatConstellation();
@@ -604,77 +876,68 @@ function animate() {
     }
     collisionBar.style.width = `${collisionEnergy}%`;
 
-    // Continuous Deterministic Curve across Windows:
-    // Determine an invariant order between the two stars
+    // Continuous Invariant Math Across Both Windows:
     const isPrimary = windowId < peer.id;
-    const starA_global = isPrimary ? myCoords : peer;
-    const starB_global = isPrimary ? peer : myCoords;
+    const starA = isPrimary ? myRect.cx : peer.center.x;
+    const starA_y = isPrimary ? myRect.cy : peer.center.y;
+    const starB = isPrimary ? peer.center.x : myRect.cx;
+    const starB_y = isPrimary ? peer.center.y : myRect.cy;
 
-    const spanX = starB_global.centerX - starA_global.centerX;
-    const spanY = starB_global.centerY - starA_global.centerY;
+    const spanX = starB - starA;
+    const spanY = starB_y - starA_y;
     const totalDist = Math.hypot(spanX, spanY) || 1;
 
-    // Normal vector perpendicular to the connection line
+    // Perpendicular normal vector
     const normX = -spanY / totalDist;
     const normY = spanX / totalDist;
 
-    // Color gradient
     const colA = new THREE.Color(myPalette.hexPrimary);
     const colB = new THREE.Color(peer.palette.hexPrimary);
 
-    // 1. Entangled Particle Stream
-    const streamPos = streamGeometry.attributes.position.array;
-    const streamCol = streamGeometry.attributes.color.array;
+    // 1. Entangled Particle Stream (Directly in Global Screen Coordinates!)
+    const bridgePos = bridgeGeo.attributes.position.array;
+    const bridgeCol = bridgeGeo.attributes.color.array;
 
-    for (let i = 0; i < streamCount; i++) {
-      streamProgress[i] += streamSpeed[i];
-      if (streamProgress[i] > 1.0) streamProgress[i] = 0;
+    for (let i = 0; i < bridgeParticleCount; i++) {
+      bridgeProgress[i] += bridgeSpeeds[i];
+      if (bridgeProgress[i] > 1.0) bridgeProgress[i] = 0;
 
-      const u = streamProgress[i];
-      
-      // Global position along the bridge
-      const wave = Math.sin(u * Math.PI) * streamLateralOffset[i];
-      const gX = starA_global.centerX + spanX * u + normX * wave;
-      const gY = starA_global.centerY + spanY * u + normY * wave;
+      const u = bridgeProgress[i];
+      const wave = Math.sin(u * Math.PI) * bridgeSpread[i] + Math.sin(u * Math.PI * 4 + elapsedTime * 4) * 8;
 
-      // Map to this window's local Three.js coordinates
-      const locX = gX - myCoords.cx;
-      const locY = -(gY - myCoords.cy); // Flip screen Y to Three.js Y
+      // Global Screen Coordinates:
+      const gx = starA + spanX * u + normX * wave;
+      const gy = starA_y + spanY * u + normY * wave;
 
-      streamPos[i * 3] = locX;
-      streamPos[i * 3 + 1] = locY;
-      streamPos[i * 3 + 2] = Math.sin(u * Math.PI * 4 + elapsedTime * 4) * 12;
+      // In Three.js screen-space world, X = gx, Y = -gy:
+      bridgePos[i * 3] = gx;
+      bridgePos[i * 3 + 1] = -gy;
+      bridgePos[i * 3 + 2] = Math.sin(u * Math.PI * 3 + elapsedTime * 3) * 15;
 
-      // Color interpolation
-      const pColor = colA.clone().lerp(colB, isPrimary ? u : 1 - u);
-      streamCol[i * 3] = pColor.r;
-      streamCol[i * 3 + 1] = pColor.g;
-      streamCol[i * 3 + 2] = pColor.b;
+      const pCol = colA.clone().lerp(colB, isPrimary ? u : 1 - u);
+      bridgeCol[i * 3] = pCol.r;
+      bridgeCol[i * 3 + 1] = pCol.g;
+      bridgeCol[i * 3 + 2] = pCol.b;
     }
+    bridgeGeo.attributes.position.needsUpdate = true;
+    bridgeGeo.attributes.color.needsUpdate = true;
+    bridgeParticles.visible = true;
 
-    streamGeometry.attributes.position.needsUpdate = true;
-    streamGeometry.attributes.color.needsUpdate = true;
-    streamParticles.visible = true;
-
-    // 2. Gravitational Field Lines (Mathematically Continuous Across Window Borders!)
-    for (let l = 0; l < lineCount; l++) {
-      const line = fieldLines[l];
+    // 2. Gravitational Dipole Streamlines
+    for (let l = 0; l < streamCount; l++) {
+      const line = streamlines[l];
       const points = [];
-      const steps = 36;
-      const spread = (l - (lineCount - 1) / 2) * 22;
+      const steps = 40;
+      const spread = (l - (streamCount - 1) / 2) * 26;
 
       for (let s = 0; s <= steps; s++) {
         const u = s / steps;
-        const wave = Math.sin(u * Math.PI) * spread + Math.sin(u * Math.PI * 3 + elapsedTime * 3.5 + l) * 12;
+        const wave = Math.sin(u * Math.PI) * spread + Math.sin(u * Math.PI * 3 + elapsedTime * 3 + l) * 14;
 
-        const gX = starA_global.centerX + spanX * u + normX * wave;
-        const gY = starA_global.centerY + spanY * u + normY * wave;
+        const gx = starA + spanX * u + normX * wave;
+        const gy = starA_y + spanY * u + normY * wave;
 
-        // Convert global monitor pixel to local Three.js coordinate
-        const locX = gX - myCoords.cx;
-        const locY = -(gY - myCoords.cy);
-
-        points.push(new THREE.Vector3(locX, locY, 0));
+        points.push(new THREE.Vector3(gx, -gy, 0));
       }
 
       line.geometry.setFromPoints(points);
@@ -682,25 +945,30 @@ function animate() {
     }
 
     // 3. Collision Shockwave
-    if (dist < 220) {
-      shockwaveRing.position.set(localTargetX / 2, localTargetY / 2, 10);
+    if (dist < 240) {
+      const midX = (myRect.cx + peer.center.x) / 2;
+      const midY = (myRect.cy + peer.center.y) / 2;
+      shockwave.position.set(midX, -midY, 10);
+
       shockwaveScale += 0.08;
-      if (shockwaveScale > 7) shockwaveScale = 1;
-      shockwaveRing.scale.set(shockwaveScale * 28, shockwaveScale * 28, 1);
-      shockwaveRingMat.opacity = Math.max(0, 1 - shockwaveScale / 7);
-      shockwaveRing.visible = true;
+      if (shockwaveScale > 6) shockwaveScale = 1;
+
+      shockwave.scale.set(shockwaveScale * 25, shockwaveScale * 25, 1);
+      shockwaveMat.opacity = Math.max(0, 1 - shockwaveScale / 6);
+      shockwave.visible = true;
     } else {
-      shockwaveRing.visible = false;
+      shockwave.visible = false;
     }
 
   } else {
-    // Solo Mode
+    // Solo Orbit Mode
     statusDot.classList.remove('connected');
     statusText.textContent = '1 Celestial Core (Solo Orbit)';
     metricsOverlay.classList.remove('visible');
-    streamParticles.visible = false;
-    shockwaveRing.visible = false;
-    fieldLines.forEach(l => l.visible = false);
+    bridgeParticles.visible = false;
+    shockwave.visible = false;
+    streamlines.forEach(l => (l.visible = false));
+    if (peerOrb) peerOrb.group.visible = false;
   }
 
   renderer.render(scene, camera);
