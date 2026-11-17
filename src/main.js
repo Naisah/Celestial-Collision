@@ -176,11 +176,11 @@ for (let i = 0; i < bgCount; i++) {
 }
 bgGeo.setAttribute('position', new THREE.BufferAttribute(bgPositions, 3));
 const bgMaterial = new THREE.PointsMaterial({
-  color: 0x94a3b8,
+  color: 0xcbd5e1,
   size: 2.2,
   map: particleTexture,
   transparent: true,
-  opacity: 0.5,
+  opacity: 0.45,
   blending: THREE.AdditiveBlending,
   depthWrite: false
 });
@@ -570,27 +570,57 @@ function prunePeers() {
 }
 
 let audioCtx = null;
+let reverbNode = null;
 let droneOsc = null;
 let droneGain = null;
 let filterNode = null;
 let isAudioActive = false;
 
+function createReverbBuffer(ctx, duration = 2.4, decay = 2.2) {
+  const sampleRate = ctx.sampleRate;
+  const length = sampleRate * duration;
+  const impulse = ctx.createBuffer(2, length, sampleRate);
+  const left = impulse.getChannelData(0);
+  const right = impulse.getChannelData(1);
+  for (let i = 0; i < length; i++) {
+    const t = i / sampleRate;
+    const factor = Math.exp(-t * decay);
+    left[i] = (Math.random() * 2 - 1) * factor;
+    right[i] = (Math.random() * 2 - 1) * factor;
+  }
+  return impulse;
+}
+
 function initAudio() {
-  if (audioCtx) return;
+  if (audioCtx) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return;
+  }
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   audioCtx = new AudioContext();
+
+  try {
+    reverbNode = audioCtx.createConvolver();
+    reverbNode.buffer = createReverbBuffer(audioCtx, 2.5, 2.2);
+    const reverbGain = audioCtx.createGain();
+    reverbGain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+    reverbNode.connect(reverbGain);
+    reverbGain.connect(audioCtx.destination);
+  } catch (e) {
+    reverbNode = null;
+  }
 
   droneOsc = audioCtx.createOscillator();
   droneGain = audioCtx.createGain();
   filterNode = audioCtx.createBiquadFilter();
 
-  droneOsc.type = 'triangle';
-  droneOsc.frequency.setValueAtTime(65, audioCtx.currentTime);
+  droneOsc.type = 'sine';
+  droneOsc.frequency.setValueAtTime(55, audioCtx.currentTime);
 
   filterNode.type = 'lowpass';
-  filterNode.frequency.setValueAtTime(220, audioCtx.currentTime);
+  filterNode.frequency.setValueAtTime(180, audioCtx.currentTime);
 
-  droneGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+  droneGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
 
   droneOsc.connect(filterNode);
   filterNode.connect(droneGain);
@@ -603,31 +633,98 @@ function initAudio() {
 function updateAudio(distance) {
   if (!audioCtx || !isAudioActive) return;
   const normDist = Math.max(0, Math.min(1, distance / 1400));
-  const targetFreq = 180 + (1 - normDist) * 850;
+  const targetFreq = 160 + (1 - normDist) * 700;
   filterNode.frequency.setTargetAtTime(targetFreq, audioCtx.currentTime, 0.1);
 }
 
-function playCatChime() {
+function playCollisionSound() {
   if (!audioCtx) initAudio();
   if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
 
   const now = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
 
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(587.33, now);
-  osc.frequency.exponentialRampToValueAtTime(880.0, now + 0.18);
-  osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.38);
+  const subOsc = audioCtx.createOscillator();
+  const subGain = audioCtx.createGain();
+  subOsc.type = 'sine';
+  subOsc.frequency.setValueAtTime(75, now);
+  subOsc.frequency.exponentialRampToValueAtTime(36, now + 1.1);
+  subGain.gain.setValueAtTime(0.0001, now);
+  subGain.gain.linearRampToValueAtTime(0.18, now + 0.03);
+  subGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
+  subOsc.connect(subGain);
+  subGain.connect(audioCtx.destination);
+  subOsc.start(now);
+  subOsc.stop(now + 1.15);
 
-  gain.gain.setValueAtTime(0.2, now);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+  const bufferSize = Math.floor(audioCtx.sampleRate * 0.25);
+  const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const output = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    output[i] = Math.random() * 2 - 1;
+  }
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = noiseBuffer;
+  const noiseFilter = audioCtx.createBiquadFilter();
+  noiseFilter.type = 'bandpass';
+  noiseFilter.frequency.setValueAtTime(260, now);
+  noiseFilter.frequency.exponentialRampToValueAtTime(90, now + 0.25);
+  noiseFilter.Q.setValueAtTime(3.5, now);
+  const noiseGain = audioCtx.createGain();
+  noiseGain.gain.setValueAtTime(0.0001, now);
+  noiseGain.gain.linearRampToValueAtTime(0.05, now + 0.02);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+  noise.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(audioCtx.destination);
+  noise.start(now);
+  noise.stop(now + 0.4);
 
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
+  const notes = [
+    { f: 293.66, detune: 1.5, vol: 0.06 },
+    { f: 440.00, detune: -1.8, vol: 0.05 },
+    { f: 554.37, detune: 2.0, vol: 0.045 },
+    { f: 659.25, detune: -1.5, vol: 0.04 },
+    { f: 880.00, detune: 2.2, vol: 0.03 },
+    { f: 1108.73, detune: 0.0, vol: 0.02 }
+  ];
 
-  osc.start(now);
-  osc.stop(now + 0.45);
+  notes.forEach((note, idx) => {
+    const startTime = now + idx * 0.038;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(note.f, startTime);
+    osc.detune.setValueAtTime(note.detune, startTime);
+
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.linearRampToValueAtTime(note.vol, startTime + 0.025);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 2.5 + idx * 0.08);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    if (reverbNode) {
+      gain.connect(reverbNode);
+    }
+
+    osc.start(startTime);
+    osc.stop(startTime + 2.8);
+  });
+
+  const shimmer = audioCtx.createOscillator();
+  const shimmerGain = audioCtx.createGain();
+  shimmer.type = 'triangle';
+  shimmer.frequency.setValueAtTime(1318.5, now + 0.08);
+  shimmer.frequency.exponentialRampToValueAtTime(1760.0, now + 0.45);
+  shimmerGain.gain.setValueAtTime(0.0001, now);
+  shimmerGain.gain.linearRampToValueAtTime(0.018, now + 0.1);
+  shimmerGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.4);
+  shimmer.connect(shimmerGain);
+  shimmerGain.connect(audioCtx.destination);
+  if (reverbNode) shimmerGain.connect(reverbNode);
+  shimmer.start(now + 0.08);
+  shimmer.stop(now + 1.45);
 }
 
 const statusDot = document.getElementById('status-dot');
@@ -692,6 +789,12 @@ soundBtn.addEventListener('click', () => {
       isAudioActive = false;
       soundBtn.classList.remove('btn-primary');
     }
+  }
+});
+
+window.addEventListener('pointerdown', () => {
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
   }
 });
 
@@ -878,7 +981,7 @@ function animate() {
         isCatMode = true;
         statusDot.classList.add('cat-mode');
         catToast.classList.add('active');
-        playCatChime();
+        playCollisionSound();
         setTimeout(() => catToast.classList.remove('active'), 3200);
       }
     } else {
