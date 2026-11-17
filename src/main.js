@@ -212,70 +212,85 @@ function createCelestialOrb(palette) {
     corePositions[i * 3 + 2] = sz;
     coreOriginalSphere.push(new THREE.Vector3(sx, sy, sz));
 
-    let cx = 0, cy = 0, cz = (Math.random() - 0.5) * 20;
-    const catGroup = i % 100;
+    let cx = 0, cy = 0, cz = (Math.random() - 0.5) * 16;
+    const bucket = i % 100;
 
-    if (catGroup < 45) {
-      const angle = Math.random() * Math.PI * 2;
-      const rad = 85 * Math.pow(Math.random(), 0.5);
-      cx = Math.cos(angle) * (rad * 1.15);
-      cy = Math.sin(angle) * (rad * 0.95) - 5;
-    } else if (catGroup < 60) {
-      const u = Math.random();
-      const v = Math.random();
-      const baseL = new THREE.Vector2(-75, 55);
-      const baseR = new THREE.Vector2(-25, 75);
-      const tip = new THREE.Vector2(-60, 155);
-      const w0 = 1 - Math.sqrt(u);
-      const w1 = Math.sqrt(u) * (1 - v);
-      const w2 = Math.sqrt(u) * v;
-      cx = w0 * baseL.x + w1 * baseR.x + w2 * tip.x;
-      cy = w0 * baseL.y + w1 * baseR.y + w2 * tip.y;
-    } else if (catGroup < 75) {
-      const u = Math.random();
-      const v = Math.random();
-      const baseL = new THREE.Vector2(25, 75);
-      const baseR = new THREE.Vector2(75, 55);
-      const tip = new THREE.Vector2(60, 155);
-      const w0 = 1 - Math.sqrt(u);
-      const w1 = Math.sqrt(u) * (1 - v);
-      const w2 = Math.sqrt(u) * v;
-      cx = w0 * baseL.x + w1 * baseR.x + w2 * tip.x;
-      cy = w0 * baseL.y + w1 * baseR.y + w2 * tip.y;
-    } else if (catGroup < 88) {
-      const isRight = (catGroup % 2 === 0);
-      const side = isRight ? 1 : -1;
-      const whiskerRow = Math.floor(Math.random() * 3);
+    if (bucket < 28) {
+      const angle = (i / 700) * Math.PI * 2;
+      const cheekBulge = 1.0 + 0.18 * Math.sin(angle) * Math.sin(angle);
+      const hRad = 92 * cheekBulge;
+      cx = Math.cos(angle) * hRad;
+      cy = Math.sin(angle) * (hRad * 0.88) - 10;
+    } else if (bucket < 46) {
+      const isRight = (bucket % 2 === 0);
+      const sign = isRight ? 1 : -1;
       const t = Math.random();
-      const startX = side * 35;
-      const startY = -10 + (whiskerRow - 1) * 12;
-      const endX = side * (105 + Math.random() * 35);
-      const endY = startY + (whiskerRow === 0 ? 12 : whiskerRow === 1 ? -4 : -20);
-      cx = THREE.MathUtils.lerp(startX, endX, t);
-      cy = THREE.MathUtils.lerp(startY, endY, t) + Math.sin(t * Math.PI) * (side * 4);
-    } else if (catGroup < 94) {
-      const eyeSide = (catGroup % 2 === 0) ? 1 : -1;
-      const eyeCenter = new THREE.Vector2(eyeSide * 35, 18);
-      const eyeAngle = Math.random() * Math.PI * 2;
-      const eyeR = Math.random() * 12;
-      cx = eyeCenter.x + Math.cos(eyeAngle) * eyeR * 1.3;
-      cy = eyeCenter.y + Math.sin(eyeAngle) * eyeR * 0.75;
-    } else if (catGroup < 97) {
-      const u = Math.random();
-      if (u < 0.6) {
-        cx = (Math.random() - 0.5) * 12;
-        cy = -12 + (Math.random() - 0.5) * 8;
+      const edge = Math.random();
+
+      if (edge < 0.48) {
+        cx = THREE.MathUtils.lerp(sign * 75, sign * 65, t);
+        cy = THREE.MathUtils.lerp(55, 168, t);
+      } else if (edge < 0.82) {
+        cx = THREE.MathUtils.lerp(sign * 65, sign * 22, t);
+        cy = THREE.MathUtils.lerp(168, 85, t);
       } else {
-        const side = Math.random() > 0.5 ? 1 : -1;
-        const mt = Math.random();
-        cx = side * (mt * 16);
-        cy = -20 - Math.sin(mt * Math.PI) * 5;
+        cx = THREE.MathUtils.lerp(sign * 60, sign * 56, t);
+        cy = THREE.MathUtils.lerp(75, 138, t);
       }
+    } else if (bucket < 60) {
+      const isRight = (bucket % 2 === 0);
+      const sign = isRight ? 1 : -1;
+      const whiskerIdx = Math.floor(Math.random() * 3);
+      const t = Math.random();
+      const startX = sign * 44;
+      const startY = -12 + (whiskerIdx - 1) * 12;
+      const endX = sign * (145 + Math.random() * 30);
+      const endY = startY + (whiskerIdx === 0 ? 16 : whiskerIdx === 1 ? -2 : -22);
+
+      cx = THREE.MathUtils.lerp(startX, endX, t);
+      cy = THREE.MathUtils.lerp(startY, endY, t) + Math.sin(t * Math.PI) * (sign * 5);
+    } else if (bucket < 74) {
+      const isRight = (bucket % 2 === 0);
+      const sign = isRight ? 1 : -1;
+      const eyeCenter = new THREE.Vector2(sign * 38, 20);
+      const t = Math.random();
+      const isUpper = Math.random() > 0.35;
+
+      if (isUpper) {
+        cx = THREE.MathUtils.lerp(sign * 56, sign * 20, t);
+        cy = 20 + Math.sin(t * Math.PI) * 11;
+      } else {
+        cx = THREE.MathUtils.lerp(sign * 56, sign * 20, t);
+        cy = 20 - Math.sin(t * Math.PI) * 7;
+      }
+
+      if (Math.random() < 0.25) {
+        cx = eyeCenter.x + (Math.random() - 0.5) * 6;
+        cy = eyeCenter.y + (Math.random() - 0.5) * 6;
+      }
+    } else if (bucket < 82) {
+      const u = Math.random();
+      if (u < 0.5) {
+        const nt = Math.random();
+        cx = (Math.random() - 0.5) * 16 * (1 - nt);
+        cy = -6 - nt * 10;
+      } else {
+        const isRight = Math.random() > 0.5;
+        const sign = isRight ? 1 : -1;
+        const mt = Math.random();
+        cx = sign * (mt * 24);
+        cy = -22 - Math.sin(mt * Math.PI) * 10;
+      }
+    } else if (bucket < 94) {
+      const fAng = Math.random() * Math.PI * 2;
+      const fRad = Math.random() * 70;
+      cx = Math.cos(fAng) * (fRad * 1.05);
+      cy = Math.sin(fAng) * (fRad * 0.85) - 10;
     } else {
-      const sAngle = Math.random() * Math.PI * 2;
-      const sR = 120 + Math.random() * 60;
-      cx = Math.cos(sAngle) * sR;
-      cy = Math.sin(sAngle) * sR;
+      const sAng = Math.random() * Math.PI * 2;
+      const sRad = 125 + Math.random() * 55;
+      cx = Math.cos(sAng) * sRad;
+      cy = Math.sin(sAng) * sRad;
     }
 
     coreCatTarget.push(new THREE.Vector3(cx, cy, cz));
@@ -341,19 +356,45 @@ function createCelestialOrb(palette) {
   orbGroup.add(fluxPoints);
 
   const catLineIndices = [
-    new THREE.Vector3(-75, 55, 0), new THREE.Vector3(-60, 155, 0),
-    new THREE.Vector3(-60, 155, 0), new THREE.Vector3(-25, 75, 0),
-    new THREE.Vector3(-25, 75, 0), new THREE.Vector3(-75, 55, 0),
-    new THREE.Vector3(25, 75, 0), new THREE.Vector3(60, 155, 0),
-    new THREE.Vector3(60, 155, 0), new THREE.Vector3(75, 55, 0),
-    new THREE.Vector3(75, 55, 0), new THREE.Vector3(25, 75, 0),
-    new THREE.Vector3(-25, 75, 0), new THREE.Vector3(25, 75, 0),
-    new THREE.Vector3(-35, -2, 0), new THREE.Vector3(-125, 12, 0),
-    new THREE.Vector3(-35, -12, 0), new THREE.Vector3(-135, -12, 0),
-    new THREE.Vector3(-35, -22, 0), new THREE.Vector3(-125, -34, 0),
-    new THREE.Vector3(35, -2, 0), new THREE.Vector3(125, 12, 0),
-    new THREE.Vector3(35, -12, 0), new THREE.Vector3(135, -12, 0),
-    new THREE.Vector3(35, -22, 0), new THREE.Vector3(125, -34, 0),
+    new THREE.Vector3(-75, 55, 0), new THREE.Vector3(-65, 168, 0),
+    new THREE.Vector3(-65, 168, 0), new THREE.Vector3(-22, 85, 0),
+    new THREE.Vector3(-62, 75, 0), new THREE.Vector3(-58, 140, 0),
+    new THREE.Vector3(-58, 140, 0), new THREE.Vector3(-32, 88, 0),
+    new THREE.Vector3(75, 55, 0), new THREE.Vector3(65, 168, 0),
+    new THREE.Vector3(65, 168, 0), new THREE.Vector3(22, 85, 0),
+    new THREE.Vector3(62, 75, 0), new THREE.Vector3(60, 140, 0),
+    new THREE.Vector3(60, 140, 0), new THREE.Vector3(32, 88, 0),
+    new THREE.Vector3(-22, 85, 0), new THREE.Vector3(22, 85, 0),
+    new THREE.Vector3(-75, 55, 0), new THREE.Vector3(-96, 12, 0),
+    new THREE.Vector3(-96, 12, 0), new THREE.Vector3(-104, -22, 0),
+    new THREE.Vector3(-104, -22, 0), new THREE.Vector3(-85, -60, 0),
+    new THREE.Vector3(-85, -60, 0), new THREE.Vector3(0, -90, 0),
+    new THREE.Vector3(75, 55, 0), new THREE.Vector3(96, 12, 0),
+    new THREE.Vector3(96, 12, 0), new THREE.Vector3(104, -22, 0),
+    new THREE.Vector3(104, -22, 0), new THREE.Vector3(85, -60, 0),
+    new THREE.Vector3(85, -60, 0), new THREE.Vector3(0, -90, 0),
+    new THREE.Vector3(-56, 20, 0), new THREE.Vector3(-38, 30, 0),
+    new THREE.Vector3(-38, 30, 0), new THREE.Vector3(-20, 20, 0),
+    new THREE.Vector3(-56, 20, 0), new THREE.Vector3(-38, 13, 0),
+    new THREE.Vector3(-38, 13, 0), new THREE.Vector3(-20, 20, 0),
+    new THREE.Vector3(20, 20, 0), new THREE.Vector3(38, 30, 0),
+    new THREE.Vector3(38, 30, 0), new THREE.Vector3(56, 20, 0),
+    new THREE.Vector3(20, 20, 0), new THREE.Vector3(38, 13, 0),
+    new THREE.Vector3(38, 13, 0), new THREE.Vector3(56, 20, 0),
+    new THREE.Vector3(-8, -6, 0), new THREE.Vector3(8, -6, 0),
+    new THREE.Vector3(-8, -6, 0), new THREE.Vector3(0, -16, 0),
+    new THREE.Vector3(8, -6, 0), new THREE.Vector3(0, -16, 0),
+    new THREE.Vector3(0, -16, 0), new THREE.Vector3(0, -24, 0),
+    new THREE.Vector3(0, -24, 0), new THREE.Vector3(-14, -34, 0),
+    new THREE.Vector3(-14, -34, 0), new THREE.Vector3(-26, -28, 0),
+    new THREE.Vector3(0, -24, 0), new THREE.Vector3(14, -34, 0),
+    new THREE.Vector3(14, -34, 0), new THREE.Vector3(26, -28, 0),
+    new THREE.Vector3(-44, -12, 0), new THREE.Vector3(-150, 4, 0),
+    new THREE.Vector3(-46, -24, 0), new THREE.Vector3(-170, -24, 0),
+    new THREE.Vector3(-44, -36, 0), new THREE.Vector3(-150, -56, 0),
+    new THREE.Vector3(44, -12, 0), new THREE.Vector3(150, 4, 0),
+    new THREE.Vector3(46, -24, 0), new THREE.Vector3(170, -24, 0),
+    new THREE.Vector3(44, -36, 0), new THREE.Vector3(150, -56, 0)
   ];
   const catLineGeo = new THREE.BufferGeometry().setFromPoints(catLineIndices);
   const catLineMat = new THREE.LineBasicMaterial({
@@ -579,7 +620,6 @@ const distVal = document.getElementById('dist-val');
 const collisionBar = document.getElementById('collision-bar');
 const spawnBtn = document.getElementById('spawn-btn');
 const soundBtn = document.getElementById('sound-btn');
-const catBtn = document.getElementById('cat-btn');
 const catToast = document.getElementById('cat-toast');
 
 function applyPalette(pal) {
@@ -593,21 +633,6 @@ function applyPalette(pal) {
   });
 }
 
-function triggerCatConstellation(manual = false) {
-  isCatMode = !isCatMode;
-
-  if (isCatMode) {
-    statusDot.classList.add('cat-mode');
-    catToast.classList.add('active');
-    catBtn.textContent = 'Star Shape';
-    playCatChime();
-    setTimeout(() => catToast.classList.remove('active'), 3200);
-  } else {
-    statusDot.classList.remove('cat-mode');
-    catBtn.textContent = 'Cat Shape';
-  }
-}
-
 const pickerContainer = document.getElementById('palette-picker');
 PALETTES.forEach((p) => {
   const swatch = document.createElement('div');
@@ -618,8 +643,6 @@ PALETTES.forEach((p) => {
   swatch.addEventListener('click', () => applyPalette(p));
   pickerContainer.appendChild(swatch);
 });
-
-catBtn.addEventListener('click', () => triggerCatConstellation(true));
 
 spawnBtn.addEventListener('click', () => {
   const rect = getWindowRect();
@@ -667,9 +690,6 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
     currentPaletteIndex = (currentPaletteIndex + 1) % PALETTES.length;
     applyPalette(PALETTES[currentPaletteIndex]);
-  } else if (e.code === 'KeyC') {
-    e.preventDefault();
-    triggerCatConstellation(true);
   }
 });
 
@@ -720,8 +740,8 @@ function animate() {
   myOrb.fluxGeo.attributes.position.needsUpdate = true;
 
   if (isCatMode) {
-    myOrb.catLineMat.opacity = Math.min(0.85, myOrb.catLineMat.opacity + 0.05);
-    const breath = 1 + Math.sin(elapsedTime * 2.5) * 0.03;
+    myOrb.catLineMat.opacity = Math.min(0.9, myOrb.catLineMat.opacity + 0.05);
+    const breath = 1 + Math.sin(elapsedTime * 2.5) * 0.025;
     myOrb.corePoints.scale.set(breath, breath, 1);
     myOrb.catLines.scale.set(breath, breath, 1);
     myOrb.haloSprite.scale.set(450 * breath, 450 * breath, 1);
@@ -774,7 +794,7 @@ function animate() {
     peerOrb.fluxGeo.attributes.position.needsUpdate = true;
 
     if (peer.isCat) {
-      peerOrb.catLineMat.opacity = Math.min(0.85, peerOrb.catLineMat.opacity + 0.05);
+      peerOrb.catLineMat.opacity = Math.min(0.9, peerOrb.catLineMat.opacity + 0.05);
     } else {
       peerOrb.catLineMat.opacity = Math.max(0, peerOrb.catLineMat.opacity - 0.05);
       peerOrb.group.rotation.z = elapsedTime * 0.12;
@@ -792,13 +812,21 @@ function animate() {
 
     updateAudio(dist);
 
-    if (dist < 280) {
+    if (dist < 260) {
       collisionEnergy = Math.min(100, collisionEnergy + 1.2);
       if (collisionEnergy >= 100 && !isCatMode) {
-        triggerCatConstellation();
+        isCatMode = true;
+        statusDot.classList.add('cat-mode');
+        catToast.classList.add('active');
+        playCatChime();
+        setTimeout(() => catToast.classList.remove('active'), 3200);
       }
     } else {
-      collisionEnergy = Math.max(0, collisionEnergy - 0.4);
+      collisionEnergy = Math.max(0, collisionEnergy - 0.5);
+      if (collisionEnergy <= 0 && isCatMode) {
+        isCatMode = false;
+        statusDot.classList.remove('cat-mode');
+      }
     }
     collisionBar.style.width = `${collisionEnergy}%`;
 
@@ -887,6 +915,12 @@ function animate() {
     shockwave.visible = false;
     streamlines.forEach(l => (l.visible = false));
     if (peerOrb) peerOrb.group.visible = false;
+
+    collisionEnergy = Math.max(0, collisionEnergy - 0.5);
+    if (collisionEnergy <= 0 && isCatMode) {
+      isCatMode = false;
+      statusDot.classList.remove('cat-mode');
+    }
   }
 
   renderer.render(scene, camera);
