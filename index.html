@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Celestial Collision • Entangled Across Windows</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>" />
+  </head>
+  <body>
+    <!-- 3D WebGL Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- Top HUD Banner -->
+    <div class="hud-header">
+      <span class="title">Celestial Collision</span>
+      <div class="divider"></div>
+      <div class="status-pill">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">1 Celestial Core (Solo Orbit)</span>
+      </div>
+    </div>
+
+    <!-- Dynamic Metrics Overlay -->
+    <div class="metrics-overlay" id="metrics-overlay">
+      GRAVITATIONAL TENSION: <span id="tension-val">0</span> AU // DISTANCE: <span id="dist-val">0</span> PX
+    </div>
+
+    <!-- Bottom Controls -->
+    <div class="hud-footer">
+      <div class="button-group">
+        <button id="spawn-btn" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+            <path d="M3 9h18"/>
+            <path d="M9 21V9"/>
+          </svg>
+          Spawn Partner Window
+        </button>
+
+        <button id="sound-btn" class="btn btn-icon" title="Toggle Celestial Audio">
+          <svg id="sound-icon-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="hint-text">
+        Drag or resize windows across your desktop to stretch & bend the gravitational field
+      </p>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
