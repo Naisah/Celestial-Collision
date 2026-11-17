@@ -72,6 +72,17 @@ let myPalette = PALETTES[currentPaletteIndex];
 const windowId = 'celestial_' + Math.random().toString(36).substring(2, 9);
 const peers = new Map();
 
+function createSeededRandom(initialSeed) {
+  let s = initialSeed;
+  return function() {
+    s |= 0;
+    s = (s + 0x6D2B79F5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 function getWindowRect() {
   const sx = window.screenX !== undefined ? window.screenX : (window.screenLeft || 0);
   const sy = window.screenY !== undefined ? window.screenY : (window.screenTop || 0);
@@ -156,11 +167,12 @@ container.appendChild(renderer.domElement);
 const bgCount = 600;
 const bgGeo = new THREE.BufferGeometry();
 const bgPositions = new Float32Array(bgCount * 3);
+const bgRng = createSeededRandom(777);
 
 for (let i = 0; i < bgCount; i++) {
-  bgPositions[i * 3] = (Math.random() - 0.5) * 5000 + 1000;
-  bgPositions[i * 3 + 1] = -( (Math.random() - 0.5) * 4000 + 600 );
-  bgPositions[i * 3 + 2] = -500 + (Math.random() - 0.5) * 200;
+  bgPositions[i * 3] = (bgRng() - 0.5) * 5000 + 1000;
+  bgPositions[i * 3 + 1] = -( (bgRng() - 0.5) * 4000 + 600 );
+  bgPositions[i * 3 + 2] = -500 + (bgRng() - 0.5) * 200;
 }
 bgGeo.setAttribute('position', new THREE.BufferAttribute(bgPositions, 3));
 const bgMaterial = new THREE.PointsMaterial({
@@ -175,7 +187,8 @@ const bgMaterial = new THREE.PointsMaterial({
 const bgStars = new THREE.Points(bgGeo, bgMaterial);
 scene.add(bgStars);
 
-function createCelestialOrb(palette) {
+function createCelestialOrb(palette, seed = 1001) {
+  const rng = createSeededRandom(seed);
   const orbGroup = new THREE.Group();
 
   const glowMat = new THREE.SpriteMaterial({
@@ -199,9 +212,9 @@ function createCelestialOrb(palette) {
   const CORE_RADIUS = 135;
 
   for (let i = 0; i < coreCount; i++) {
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos(Math.random() * 2 - 1);
-    const r = CORE_RADIUS * Math.pow(Math.random(), 0.65);
+    const theta = rng() * Math.PI * 2;
+    const phi = Math.acos(rng() * 2 - 1);
+    const r = CORE_RADIUS * Math.pow(rng(), 0.65);
 
     const sx = r * Math.sin(phi) * Math.cos(theta);
     const sy = r * Math.sin(phi) * Math.sin(theta);
@@ -212,7 +225,7 @@ function createCelestialOrb(palette) {
     corePositions[i * 3 + 2] = sz;
     coreOriginalSphere.push(new THREE.Vector3(sx, sy, sz));
 
-    let cx = 0, cy = 0, cz = (Math.random() - 0.5) * 16;
+    let cx = 0, cy = 0, cz = (rng() - 0.5) * 16;
     const bucket = i % 100;
 
     if (bucket < 28) {
@@ -224,8 +237,8 @@ function createCelestialOrb(palette) {
     } else if (bucket < 46) {
       const isRight = (bucket % 2 === 0);
       const sign = isRight ? 1 : -1;
-      const t = Math.random();
-      const edge = Math.random();
+      const t = rng();
+      const edge = rng();
 
       if (edge < 0.48) {
         cx = THREE.MathUtils.lerp(sign * 75, sign * 65, t);
@@ -240,11 +253,11 @@ function createCelestialOrb(palette) {
     } else if (bucket < 60) {
       const isRight = (bucket % 2 === 0);
       const sign = isRight ? 1 : -1;
-      const whiskerIdx = Math.floor(Math.random() * 3);
-      const t = Math.random();
+      const whiskerIdx = Math.floor(rng() * 3);
+      const t = rng();
       const startX = sign * 44;
       const startY = -12 + (whiskerIdx - 1) * 12;
-      const endX = sign * (145 + Math.random() * 30);
+      const endX = sign * (145 + rng() * 30);
       const endY = startY + (whiskerIdx === 0 ? 16 : whiskerIdx === 1 ? -2 : -22);
 
       cx = THREE.MathUtils.lerp(startX, endX, t);
@@ -253,8 +266,8 @@ function createCelestialOrb(palette) {
       const isRight = (bucket % 2 === 0);
       const sign = isRight ? 1 : -1;
       const eyeCenter = new THREE.Vector2(sign * 38, 20);
-      const t = Math.random();
-      const isUpper = Math.random() > 0.35;
+      const t = rng();
+      const isUpper = rng() > 0.35;
 
       if (isUpper) {
         cx = THREE.MathUtils.lerp(sign * 56, sign * 20, t);
@@ -264,31 +277,31 @@ function createCelestialOrb(palette) {
         cy = 20 - Math.sin(t * Math.PI) * 7;
       }
 
-      if (Math.random() < 0.25) {
-        cx = eyeCenter.x + (Math.random() - 0.5) * 6;
-        cy = eyeCenter.y + (Math.random() - 0.5) * 6;
+      if (rng() < 0.25) {
+        cx = eyeCenter.x + (rng() - 0.5) * 6;
+        cy = eyeCenter.y + (rng() - 0.5) * 6;
       }
     } else if (bucket < 82) {
-      const u = Math.random();
+      const u = rng();
       if (u < 0.5) {
-        const nt = Math.random();
-        cx = (Math.random() - 0.5) * 16 * (1 - nt);
+        const nt = rng();
+        cx = (rng() - 0.5) * 16 * (1 - nt);
         cy = -6 - nt * 10;
       } else {
-        const isRight = Math.random() > 0.5;
+        const isRight = rng() > 0.5;
         const sign = isRight ? 1 : -1;
-        const mt = Math.random();
+        const mt = rng();
         cx = sign * (mt * 24);
         cy = -22 - Math.sin(mt * Math.PI) * 10;
       }
     } else if (bucket < 94) {
-      const fAng = Math.random() * Math.PI * 2;
-      const fRad = Math.random() * 70;
+      const fAng = rng() * Math.PI * 2;
+      const fRad = rng() * 70;
       cx = Math.cos(fAng) * (fRad * 1.05);
       cy = Math.sin(fAng) * (fRad * 0.85) - 10;
     } else {
-      const sAng = Math.random() * Math.PI * 2;
-      const sRad = 125 + Math.random() * 55;
+      const sAng = rng() * Math.PI * 2;
+      const sRad = 125 + rng() * 55;
       cx = Math.cos(sAng) * sRad;
       cy = Math.sin(sAng) * sRad;
     }
@@ -318,10 +331,10 @@ function createCelestialOrb(palette) {
   const loopsData = [];
   for (let l = 0; l < loopCount; l++) {
     const radiusX = 140 + (l % 7) * 20;
-    const radiusY = radiusX * (0.65 + Math.random() * 0.25);
-    const inclination = (l / loopCount) * Math.PI + (Math.random() - 0.5) * 0.3;
+    const radiusY = radiusX * (0.65 + rng() * 0.25);
+    const inclination = (l / loopCount) * Math.PI + (rng() - 0.5) * 0.3;
     const azimuth = (l * 0.45) % (Math.PI * 2);
-    const speed = 0.4 + Math.random() * 0.6;
+    const speed = 0.4 + rng() * 0.6;
     const direction = l % 2 === 0 ? 1 : -1;
 
     const rotEuler = new THREE.Euler(inclination, azimuth, (l * 0.3));
@@ -336,8 +349,8 @@ function createCelestialOrb(palette) {
     for (let p = 0; p < particlesPerLoop; p++) {
       fluxOffsets.push({
         loopIdx: l,
-        baseAngle: (p / particlesPerLoop) * Math.PI * 2 + (Math.random() - 0.5) * 0.05,
-        speedMultiplier: 0.95 + Math.random() * 0.1
+        baseAngle: (p / particlesPerLoop) * Math.PI * 2 + (rng() - 0.5) * 0.05,
+        speedMultiplier: 0.95 + rng() * 0.1
       });
     }
   }
@@ -422,6 +435,7 @@ function createCelestialOrb(palette) {
     catLines,
     catLineMat,
     currentPaletteId: palette.id,
+    seed,
     updatePalette(newPal) {
       this.currentPaletteId = newPal.id;
       haloSprite.material.map = createGlowSpriteTexture(newPal.primary);
@@ -432,7 +446,7 @@ function createCelestialOrb(palette) {
   };
 }
 
-const myOrb = createCelestialOrb(myPalette);
+let myOrb = createCelestialOrb(myPalette, 1001);
 scene.add(myOrb.group);
 
 let peerOrb = null;
@@ -444,11 +458,12 @@ const bridgeColors = new Float32Array(bridgeParticleCount * 3);
 const bridgeProgress = new Float32Array(bridgeParticleCount);
 const bridgeSpeeds = new Float32Array(bridgeParticleCount);
 const bridgeSpread = new Float32Array(bridgeParticleCount);
+const bridgeRng = createSeededRandom(5555);
 
 for (let i = 0; i < bridgeParticleCount; i++) {
-  bridgeProgress[i] = Math.random();
-  bridgeSpeeds[i] = 0.003 + Math.random() * 0.008;
-  bridgeSpread[i] = (Math.random() - 0.5) * 50;
+  bridgeProgress[i] = bridgeRng();
+  bridgeSpeeds[i] = 0.003 + bridgeRng() * 0.008;
+  bridgeSpread[i] = (bridgeRng() - 0.5) * 50;
 }
 
 bridgeGeo.setAttribute('position', new THREE.BufferAttribute(bridgePositions, 3));
@@ -526,6 +541,9 @@ channel.onmessage = (event) => {
   if (!data || data.id === windowId) return;
 
   if (data.type === 'sync') {
+    if (peers.size >= 1 && !peers.has(data.id)) {
+      return;
+    }
     peers.set(data.id, {
       ...data,
       lastReceived: performance.now()
@@ -646,6 +664,8 @@ PALETTES.forEach((p) => {
 });
 
 spawnBtn.addEventListener('click', () => {
+  if (peers.size >= 1) return;
+
   const rect = getWindowRect();
   const nextThemeIdx = (currentPaletteIndex + 1) % PALETTES.length;
   const newLeft = rect.x + rect.w + 16;
@@ -694,12 +714,10 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-const clock = new THREE.Clock();
-
 function animate() {
   requestAnimationFrame(animate);
 
-  const elapsedTime = clock.getElapsedTime();
+  const elapsedTime = (Date.now() % 10000000) / 1000;
   broadcastState();
   prunePeers();
 
@@ -709,6 +727,34 @@ function animate() {
   camera.top = -myRect.y;
   camera.bottom = -(myRect.y + myRect.h);
   camera.updateProjectionMatrix();
+
+  const activePeers = Array.from(peers.values()).slice(0, 1);
+
+  if (activePeers.length > 0) {
+    spawnBtn.disabled = true;
+    spawnBtn.style.opacity = '0.5';
+    spawnBtn.style.cursor = 'not-allowed';
+    spawnBtn.title = 'Maximum 2 cores active';
+  } else {
+    spawnBtn.disabled = false;
+    spawnBtn.style.opacity = '1';
+    spawnBtn.style.cursor = 'pointer';
+    spawnBtn.title = 'Open companion window';
+  }
+
+  let mySeed = 1001;
+  let peerSeed = 2002;
+  if (activePeers.length > 0) {
+    const isPrimaryWindow = windowId < activePeers[0].id;
+    mySeed = isPrimaryWindow ? 1001 : 2002;
+    peerSeed = isPrimaryWindow ? 2002 : 1001;
+  }
+
+  if (myOrb.seed !== mySeed) {
+    scene.remove(myOrb.group);
+    myOrb = createCelestialOrb(myPalette, mySeed);
+    scene.add(myOrb.group);
+  }
 
   myOrb.group.position.set(myRect.cx, -myRect.cy, 0);
 
@@ -755,13 +801,12 @@ function animate() {
     myOrb.group.rotation.z = elapsedTime * 0.12;
   }
 
-  const activePeers = Array.from(peers.values());
-
   if (activePeers.length > 0) {
     const peer = activePeers[0];
 
-    if (!peerOrb) {
-      peerOrb = createCelestialOrb(peer.palette);
+    if (!peerOrb || peerOrb.seed !== peerSeed) {
+      if (peerOrb) scene.remove(peerOrb.group);
+      peerOrb = createCelestialOrb(peer.palette, peerSeed);
       scene.add(peerOrb.group);
     }
     if (peerOrb.currentPaletteId !== peer.palette.id) {
@@ -796,8 +841,16 @@ function animate() {
 
     if (peer.isCat) {
       peerOrb.catLineMat.opacity = Math.min(0.9, peerOrb.catLineMat.opacity + 0.05);
+      const pBreath = 1 + Math.sin(elapsedTime * 2.5) * 0.025;
+      peerOrb.corePoints.scale.set(pBreath, pBreath, 1);
+      peerOrb.catLines.scale.set(pBreath, pBreath, 1);
+      peerOrb.haloSprite.scale.set(450 * pBreath, 450 * pBreath, 1);
     } else {
       peerOrb.catLineMat.opacity = Math.max(0, peerOrb.catLineMat.opacity - 0.05);
+      peerOrb.corePoints.scale.set(1, 1, 1);
+      peerOrb.catLines.scale.set(1, 1, 1);
+      const pPulse = 1 + Math.sin(elapsedTime * 2) * 0.05;
+      peerOrb.haloSprite.scale.set(480 * pPulse, 480 * pPulse, 1);
       peerOrb.group.rotation.z = elapsedTime * 0.12;
     }
 
@@ -817,7 +870,7 @@ function animate() {
     const boxGap = Math.hypot(gapX, gapY);
 
     statusDot.classList.add('connected');
-    statusText.textContent = `${activePeers.length + 1} Celestial Cores Entangled`;
+    statusText.textContent = '2/2 Celestial Cores Entangled';
     metricsOverlay.classList.add('visible');
     distVal.textContent = Math.round(dist);
     tensionVal.textContent = (1600 / Math.max(120, dist)).toFixed(2);
@@ -925,7 +978,7 @@ function animate() {
 
   } else {
     statusDot.classList.remove('connected');
-    statusText.textContent = '1 Celestial Core (Solo Orbit)';
+    statusText.textContent = '1/2 Celestial Cores (Solo Orbit)';
     metricsOverlay.classList.remove('visible');
     bridgeParticles.visible = false;
     shockwave.visible = false;
