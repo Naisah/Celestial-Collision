@@ -11,7 +11,7 @@ body, html {
   overflow: hidden;
   background-color: #17181e;
   background: radial-gradient(ellipse at 50% 50%, #1c1c24 0%, #17171d 65%, #121217 100%);
-  font-family: 'Space Grotesk', -apple-system, sans-serif;
+  font-family: 'Space Mono', monospace, -apple-system, sans-serif;
   color: #f8fafc;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -76,10 +76,10 @@ body, html {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Space Mono', monospace;
   font-size: 0.72rem;
   font-weight: 500;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #94a3b8;
 }
@@ -218,13 +218,13 @@ body, html {
 }
 
 .btn {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Space Mono', monospace;
   background: rgba(18, 20, 28, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #e2e8f0;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 500;
   letter-spacing: 0.04em;
   padding: 8px 16px;
@@ -276,16 +276,16 @@ body, html {
   left: 50%;
   transform: translateX(-50%) translateY(-15px);
   z-index: 20;
-  font-family: 'Space Grotesk', sans-serif;
-  background: rgba(16, 18, 26, 0.88);
+  font-family: 'Cinzel', serif;
+  background: rgba(16, 18, 26, 0.9);
   border: 1px solid rgba(244, 114, 182, 0.35);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(244, 114, 182, 0.15);
   color: #fdf2f8;
   font-weight: 600;
-  font-size: 0.76rem;
-  letter-spacing: 0.12em;
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  padding: 8px 22px;
+  padding: 9px 26px;
   border-radius: 9999px;
   opacity: 0;
   pointer-events: none;
