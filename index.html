@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Celestial Collision</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/src/style.css" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%233b82f6'/></svg>" />
   </head>
@@ -20,10 +23,12 @@
     </div>
 
     <div class="metrics-overlay" id="metrics-overlay">
-      <span>DIST: <strong id="dist-val">0</strong> PX</span>
-      <span>TENSION: <strong id="tension-val">0</strong> AU</span>
+      <span>DIST <strong id="dist-val">0</strong>PX</span>
+      <span class="sep">/</span>
+      <span>TENSION <strong id="tension-val">0</strong>AU</span>
+      <span class="sep">/</span>
       <span>
-        COLLISION: <strong id="energy-val">0</strong>%
+        COLLISION <strong id="energy-val">0</strong>%
         <span class="collision-bar-wrap">
           <span class="collision-bar-fill" id="collision-bar"></span>
         </span>
@@ -39,7 +44,7 @@
         <div class="palette-picker" id="palette-picker" title="Change Palette"></div>
 
         <button id="spawn-btn" class="btn btn-primary" title="Open companion window">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
             <path d="M3 9h18"/>
             <path d="M9 21V9"/>
@@ -48,7 +53,7 @@
         </button>
 
         <button id="sound-btn" class="btn btn-icon" title="Toggle Audio">
-          <svg id="sound-icon-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg id="sound-icon-on" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
             <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
